@@ -60,6 +60,10 @@ void NonOverlapingDetections(const vector<LandmarkDetector::CLNF>& models, vecto
  * General set-up, initializations, etc. Called once, before update() or draw() get called.
  */
 void ofApp::setup() {
+
+    detectMxnet();
+    return;
+
     kinectFrameCounter = 0;
 
     // ofxKinect2 guarantees that device ID 0 will always refer to the same kinect
@@ -69,14 +73,14 @@ void ofApp::setup() {
 
     textFont.load(OF_TTF_MONO, 28, true);
 
-    // kinect = new ofxKinectV2();
+    kinect = new ofxKinectV2();
 
     // connect to the kinect. updates occur on a separate thread
-    // bool didOpenSuccessfully = kinect->open(kinectId);
+    bool didOpenSuccessfully = kinect->open(kinectId);
 
-    // if (!didOpenSuccessfully) {
-    //     std::exit(1);
-    // }
+    if (!didOpenSuccessfully) {
+        std::exit(1);
+    }
 
     LandmarkDetector::FaceModelParameters default_parameters;
 
@@ -167,32 +171,38 @@ void visualise_tracking(cv::Mat& captured_image, const LandmarkDetector::CLNF& f
  * General  Requests new depth depth and RGB frames from the kinect, and converts to OpenCV (Mat) format
  */
 void ofApp::updateKinect() {
-    // kinect->update();
-    //
-    // if (kinect->isFrameNew()) {
-    //     // Update Kinect FPS tracking
-    //     if (++kinectFrameCounter == 15) {
-    //         double tsNow = (double)ofGetElapsedTimeMillis();
-    //         kinectFPS = (double)kinectFrameCounter / ((tsNow/1000) - (tsKinectFPS/1000));
-    //         tsKinectFPS = tsNow;
-    //         kinectFrameCounter = 0;
-    //     }
-    //
-    //     ofPixels pixelsRGB = kinect->getRgbPixels();
-    //     ofPixels pixelsDepth = kinect->getDepthPixels();
-    //     ofFloatPixels pixelsDepthRaw = kinect->getRawDepthPixels();
-    //
-    //     texRGB.loadData(pixelsRGB);
-    //     texDepth.loadData(pixelsDepth);
-    //
-    //     // Convert RGB frame grayscale
-    //     cv::cvtColor(ofxCv::toCv(pixelsRGB), matGrayscale, CV_BGR2GRAY);
-    //
-    //     // Convert depth frame to mat
-    //     matDepth = cv::Mat(pixelsDepthRaw.getHeight(), pixelsDepthRaw.getWidth(), ofxCv::getCvImageType(pixelsDepthRaw), pixelsDepthRaw.getData(), 0);
-    // }
+
+    kinect->update();
+
+    if (kinect->isFrameNew()) {
+        // Update Kinect FPS tracking
+        if (++kinectFrameCounter == 15) {
+            double tsNow = (double)ofGetElapsedTimeMillis();
+            kinectFPS = (double)kinectFrameCounter / ((tsNow/1000) - (tsKinectFPS/1000));
+            tsKinectFPS = tsNow;
+            kinectFrameCounter = 0;
+        }
+
+        ofPixels pixelsRGB = kinect->getRgbPixels();
+        ofPixels pixelsDepth = kinect->getDepthPixels();
+        ofFloatPixels pixelsDepthRaw = kinect->getRawDepthPixels();
+
+        texRGB.loadData(pixelsRGB);
+        texDepth.loadData(pixelsDepth);
+
+        // Convert RGB frame grayscale
+        cv::cvtColor(ofxCv::toCv(pixelsRGB), matGrayscale, CV_BGR2GRAY);
+
+        // Convert depth frame to mat
+        matDepth = cv::Mat(pixelsDepthRaw.getHeight(), pixelsDepthRaw.getWidth(), ofxCv::getCvImageType(pixelsDepthRaw), pixelsDepthRaw.getData(), 0);
+    }
 }
 
+
+
+void ofApp::detectMxnet() {
+  mxnet_detect(matGrayscale);
+}
 
 /**
  * @brief        Detects landmarks and facial features in the current frame based on detected faces
@@ -200,6 +210,7 @@ void ofApp::updateKinect() {
  * General       TODO @avi
  */
 void ofApp::detectLandmarks() {
+
     bool detection_success = false;
 
     // This is useful for a second pass run (if want AU predictions)
@@ -254,6 +265,7 @@ void ofApp::detectLandmarks() {
  */
 void ofApp::update() {
     updateKinect();
+    detectMxnet();
 
 //    tracker.update(matGrayscale);
     faceDetector.updateImage(matGrayscale);

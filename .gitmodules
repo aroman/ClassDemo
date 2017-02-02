@@ -1,3 +1,6 @@
 [submodule "addons/ofxCv"]
 	path = addons/ofxCv
 	url = https://github.com/kylemcdonald/ofxCv
+[submodule "3rdParty/mtcnn_mxnet"]
+	path = 3rdParty/mtcnn_mxnet
+	url = https://github.com/pangyupo/mxnet_mtcnn_face_detection.git
