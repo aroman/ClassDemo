@@ -1,3 +1,3 @@
 #include "ofxCv.h"
 
-void mxnet_detect(cv::Mat_<uchar>);
+void mxnet_detect(const cv::Mat& mat);

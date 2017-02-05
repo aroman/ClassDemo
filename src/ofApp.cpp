@@ -60,11 +60,9 @@ void NonOverlapingDetections(const vector<LandmarkDetector::CLNF>& models, vecto
  * General set-up, initializations, etc. Called once, before update() or draw() get called.
  */
 void ofApp::setup() {
-
-    detectMxnet();
-    return;
-
     kinectFrameCounter = 0;
+
+    string CWD = ofFilePath::getCurrentWorkingDirectory();
 
     // ofxKinect2 guarantees that device ID 0 will always refer to the same kinect
     // if there's only ever one plugged in
@@ -79,6 +77,7 @@ void ofApp::setup() {
     bool didOpenSuccessfully = kinect->open(kinectId);
 
     if (!didOpenSuccessfully) {
+        detectMxnet();
         std::exit(1);
     }
 
@@ -88,7 +87,7 @@ void ofApp::setup() {
     // Model should not try to re-initialising itself
     // TODO @avi more accurate comment
     default_parameters.reinit_video_every = -1;
-    default_parameters.model_location = "/opt/sensei/model/main_clnf_general.txt";
+    default_parameters.model_location = CWD + "/models/model/main_clnf_general.txt";
     default_parameters.track_gaze = true;
 
     LandmarkDetector::CLNF default_model(default_parameters.model_location);
@@ -101,16 +100,16 @@ void ofApp::setup() {
     }
 
     // Used for image masking
-    const string tri_loc = "/opt/sensei/model/tris_68_full.txt";
+    const string tri_loc = CWD + "/models/model/tris_68_full.txt";
 
     string au_loc;
 
     bool dynamic = true;
     // Indicates if a dynamic AU model should be used (dynamic is useful if the video is long enough to include neutral expressions)
     if (dynamic) {
-        au_loc = "/opt/sensei/AU_predictors/AU_all_best.txt";
+        au_loc = CWD + "/models/model/AU_all_best.txt";
     } else {
-        au_loc = "/opt/sensei/AU_predictors/AU_all_static.txt";
+        au_loc = CWD + "/models/model/AU_all_static.txt";
     }
 
     // If optical centers are not defined just use center of image
@@ -191,7 +190,7 @@ void ofApp::updateKinect() {
         texDepth.loadData(pixelsDepth);
 
         // Convert RGB frame grayscale
-        cv::cvtColor(ofxCv::toCv(pixelsRGB), matGrayscale, CV_BGR2GRAY);
+        cv::cvtColor(ofxCv::toCv(pixelsRGB), matGrayscale, CV_RGB2GRAY);
 
         // Convert depth frame to mat
         matDepth = cv::Mat(pixelsDepthRaw.getHeight(), pixelsDepthRaw.getWidth(), ofxCv::getCvImageType(pixelsDepthRaw), pixelsDepthRaw.getData(), 0);
@@ -201,7 +200,15 @@ void ofApp::updateKinect() {
 
 
 void ofApp::detectMxnet() {
-  mxnet_detect(matGrayscale);
+  ofImage testImg;
+  testImg.load(ofFilePath::getCurrentWorkingDirectory() + "/test.jpg");
+  cv::Mat imgMat = ofxCv::toCv(testImg);
+  cv::Mat imgConv;
+  cv::cvtColor(imgMat, imgConv, CV_RGB2BGR);
+  // ofLog() << "dims " << imgMat.dims << "flags " << imgMat.flags;
+	// namedWindow("Display window", cv::WINDOW_AUTOSIZE);
+  // imshow("Display window", imgMat);
+  mxnet_detect(imgConv);
 }
 
 /**
