@@ -1,9 +1,6 @@
 [submodule "3rdParty/addons/ofxCv"]
 	path = 3rdParty/addons/ofxCv
 	url = https://github.com/kylemcdonald/ofxCv
-[submodule "3rdParty/addons/ofxKinectV2"]
-	path = 3rdParty/addons/ofxKinectV2
-	url = git@github.com:aroman/ofxKinectV2.git
 [submodule "3rdParty/of"]
 	path = 3rdParty/of
 	url = https://github.com/ofNode/of
@@ -13,3 +10,6 @@
 [submodule "3rdParty/mxnet_mtcnn"]
 	path = 3rdParty/mxnet_mtcnn
 	url = https://github.com/pangyupo/mxnet_mtcnn_face_detection
+[submodule "3rdParty/addons/ofxKinectV2"]
+	path = 3rdParty/addons/ofxKinectV2
+	url = https://github.com/aroman/ofxKinectV2
