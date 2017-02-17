@@ -86,8 +86,9 @@ using namespace std;
 
 
         cv::Mat matAdjust = ofxCv::toCv(pRGB);
-        vector<mtcnn_face_bbox> mxFaces = mtcnnDetector->detectFaces(matAdjust);
+        mtcnn_detect_results detectResults = mtcnnDetector->detectFaces(matAdjust);
 
+        vector<mtcnn_face_bbox> mxFaces = detectResults.bboxes;
         int numFacesFound = mxFaces.size();
 
         //cv::cvtColor(ofxCv::toCv(pRGB), matAdjust, CV_RGB2GRAY);

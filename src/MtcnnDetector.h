@@ -9,11 +9,16 @@ struct mtcnn_face_bbox {
   double score;
 };
 
+struct mtcnn_detect_results {
+  vector<mtcnn_face_bbox> bboxes;
+  vector<vector<double>> pointGroups;
+};
+
 class MtcnnDetector {
     int width, height;
     PyObject *pDetectFunc;
   public:
     MtcnnDetector();
    ~MtcnnDetector();
-    vector<mtcnn_face_bbox> detectFaces(const cv::Mat& mat);
+    mtcnn_detect_results detectFaces(const cv::Mat& mat);
 };

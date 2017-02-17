@@ -13,12 +13,12 @@ def detect(img):
     results = detector.detect_face(img)
 
     if results is not None:
-        total_boxes = [list(box) for box in results[0]]
-        points = results[1]
+        bboxes = [list(box) for box in results[0]]
+        points = [list(box) for box in results[1]]
 
         if SHOW_VIZ:
             draw = img.copy()
-            for b in total_boxes:
+            for b in bboxes:
                 cv2.rectangle(draw, (int(b[0]), int(b[1])), (int(b[2]), int(b[3])), (255, 255, 255))
 
             for p in points:
@@ -27,4 +27,4 @@ def detect(img):
             cv2.imshow("detection result", draw)
             cv2.waitKey(0)
         else:
-            return total_boxes
+            return (bboxes, points)
