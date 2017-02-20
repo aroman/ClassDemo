@@ -6,27 +6,23 @@
 //
 //
 
-#ifndef FaceDetector_hpp
-#define FaceDetector_hpp
-
 #include <stdio.h>
 #include "ofThread.h"
 #include "ofxCv.h"
-
-#endif /* FaceDetector_hpp */
-
+#include "MtcnnDetector.h"
 
 class FaceDetector : public ofThread {
 
 public:
-//    FaceDetector();
+    FaceDetector();
     void threadedFunction();
-    void updateImage(cv::Mat grayscaleImage);
+    void updateImage(cv::Mat newImage);
 
-    vector<cv::Rect_<double>> faces_detected;
+    mtcnn_detect_results detectedFaces;
 
 private:
+    MtcnnDetector *detector;
     bool isImageDirty;
-    cv::Mat_<uchar> matGrayscale;
+    cv::Mat image;
 
 };

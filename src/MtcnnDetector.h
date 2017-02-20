@@ -1,5 +1,6 @@
 #include <python2.7/Python.h>
 #include "ofxCv.h"
+#include "ofThread.h"
 
 struct mtcnn_face_bbox {
   double x1;
@@ -15,10 +16,12 @@ struct mtcnn_detect_results {
 };
 
 class MtcnnDetector {
-    int width, height;
-    PyObject *pDetectFunc;
-  public:
+
+public:
     MtcnnDetector();
    ~MtcnnDetector();
     mtcnn_detect_results detectFaces(const cv::Mat& mat);
+
+private:
+    PyObject *pDetectFunc;
 };

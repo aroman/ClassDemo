@@ -4,7 +4,6 @@
 #include "ofxCv.h"
 #include "ofxKinectV2.h"
 #include "LandmarkCoreIncludes.h"
-#include "MtcnnDetector.h"
 #include <FaceAnalyser.h>
 #include "FaceDetector.hpp"
 
@@ -48,7 +47,7 @@ public:
 
     void draw();
 
-    void findFaces(MtcnnDetector *mtcnnDetector);
+    void findFaces(FaceDetector *faceDetector);
 
     void doRGBD(libfreenect2::Registration* registration);
 
@@ -73,8 +72,8 @@ public:
 
 private:
     ofxKinectV2 *kinect = NULL;
-    bufferFrame* frame = NULL;
-    MtcnnDetector *mtcnnDetector = NULL;
+    bufferFrame *frame = NULL;
+    FaceDetector *faceDetector = NULL;
 };
 
 

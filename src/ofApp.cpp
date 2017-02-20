@@ -75,7 +75,7 @@ using namespace std;
         return rectVec;
     }
 
-    void bufferFrame::findFaces(MtcnnDetector *mtcnnDetector) {
+    void bufferFrame::findFaces(FaceDetector *faceDetector) {
         faces.clear();
 
         //>>>>>>>> INSERT FACE DETECTOR >>>>>>>>>>>>>>>
@@ -84,40 +84,46 @@ using namespace std;
 
         //vector<rect> randR = randNRects(numRandFaces);
 
-
+        pRGB.resize(640, 360, OF_INTERPOLATE_NEAREST_NEIGHBOR);
         cv::Mat matAdjust = ofxCv::toCv(pRGB);
-        mtcnn_detect_results detectResults = mtcnnDetector->detectFaces(matAdjust);
-
-        vector<mtcnn_face_bbox> mxFaces = detectResults.bboxes;
-        int numFacesFound = mxFaces.size();
-
-        //cv::cvtColor(ofxCv::toCv(pRGB), matAdjust, CV_RGB2GRAY);
-        //cv::cvtColor(ofxCv::toCv(pRGB), matAdjust, CV_RGB2BGR);
-
-
-        //matDepth = cv::Mat(pixelsDepthRaw.getHeight(), pixelsDepthRaw.getWidth(), ofxCv::getCvImageType(pixelsDepthRaw), pixelsDepthRaw.getData(), 0);
-
-        // here's how you use the mtcnn stuff
-
-        // 1. load test image (for you, will be a frame)
-        // ofImage testImg;
-        // testImg.load(ofFilePath::getCurrentWorkingDirectory() + "/test.jpg");
-        // cv::Mat imgMat = ofxCv::toCv(testImg);
-        // cv::Mat imgConv;
-
-        // 2. convert to grayscale
-        // cv::cvtColor(imgMat, imgConv, CV_RGB2BGR);
-
-        // 3. profit !
-        // vector<mtcnn_face_bbox> faces = mxnet_detect(imgConv);
-        // printf("%d faces found\n", faces.size());
-        // for (mtcnn_face_bbox face : faces) {
-        //   printf("\t[(%f,%f), (%f,%f), score = %f\n", face.x1, face.y1, face.x2`, face.y2, face.score);
+        // faceDetector->lock();
+        // if (foobar) {
+          faceDetector->updateImage(matAdjust);
+          // foobar = false;
         // }
-
-
-
-
+        // mtcnn_detect_results detectResults = faceDetector->detectedFaces;
+        // // faceDetector->unlock();
+        //
+        vector<mtcnn_face_bbox> mxFaces = faceDetector->detectedFaces.bboxes;
+        int numFacesFound = mxFaces.size();
+        //
+        // //cv::cvtColor(ofxCv::toCv(pRGB), matAdjust, CV_RGB2GRAY);
+        // //cv::cvtColor(ofxCv::toCv(pRGB), matAdjust, CV_RGB2BGR);
+        //
+        //
+        // //matDepth = cv::Mat(pixelsDepthRaw.getHeight(), pixelsDepthRaw.getWidth(), ofxCv::getCvImageType(pixelsDepthRaw), pixelsDepthRaw.getData(), 0);
+        //
+        // // here's how you use the mtcnn stuff
+        //
+        // // 1. load test image (for you, will be a frame)
+        // // ofImage testImg;
+        // // testImg.load(ofFilePath::getCurrentWorkingDirectory() + "/test.jpg");
+        // // cv::Mat imgMat = ofxCv::toCv(testImg);
+        // // cv::Mat imgConv;
+        //
+        // // 2. convert to grayscale
+        // // cv::cvtColor(imgMat, imgConv, CV_RGB2BGR);
+        //faceDetector->detectedFaces
+        // // 3. profit !
+        // // vector<mtcnn_face_bbox> faces = mxnet_detect(imgConv);
+        // // printf("%d faces found\n", faces.size());
+        // // for (mtcnn_face_bbox face : faces) {
+        // //   printf("\t[(%f,%f), (%f,%f), score = %f\n", face.x1, face.y1, face.x2`, face.y2, face.score);
+        // // }
+        //
+        //
+        //
+        //
 
 
 
@@ -129,14 +135,10 @@ using namespace std;
         for(uint i = 0; i < numFacesFound; i++){
             faceData face;
 
-            cout << "test 5" << endl;
-
             face.r.x = mxFaces[i].x1;
             face.r.y = mxFaces[i].y1;
             face.r.width = abs(mxFaces[i].x2-mxFaces[i].x1);
             face.r.height = abs(mxFaces[i].y2-mxFaces[i].y1);
-
-            cout << "test 6" << endl;
 
             faces.push_back(face);
         }
@@ -161,15 +163,16 @@ using namespace std;
             std::exit(1);
         }
 
-        mtcnnDetector = new MtcnnDetector();
-
-        if(frame != NULL) frame = new bufferFrame();
+        if(frame == NULL) frame = new bufferFrame();
         frame->hasData = false;
 
         cout << "connected to kinect on port " << port << endl;
 
         freenect2 = kinect->freenect2;
         registration = kinect->registration;
+
+        faceDetector = new FaceDetector();
+        faceDetector->startThread(true);
     }
 
     void figKinect::update() {
@@ -184,9 +187,7 @@ using namespace std;
             frame->rgbFrame = (libfreenect2::Frame *)kinect->getRgbFrame();
             frame->depthFrame = (libfreenect2::Frame *)kinect->getDepthFrame();
 
-	        //cout << "1: " << ofGetElapsedTimeMillis() << endl;
-            frame->findFaces(mtcnnDetector);
-	        //cout << "2: " << ofGetElapsedTimeMillis() << endl;
+            frame->findFaces(faceDetector);
 
             //frame->doRGBD(registration);
 

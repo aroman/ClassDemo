@@ -5,6 +5,7 @@
 MtcnnDetector::MtcnnDetector() {
   Py_SetProgramName((char*)"mtcnn-bridge");
   Py_Initialize();
+  PyEval_InitThreads();
   import_array();
 
   PyObject *pModule, *pModuleName;
@@ -30,6 +31,9 @@ MtcnnDetector::~MtcnnDetector() {
 }
 
 mtcnn_detect_results MtcnnDetector::detectFaces(const cv::Mat& mat) {
+    PyThreadState* state = PyEval_SaveThread();
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
     mtcnn_detect_results results;
     PyObject *pValue, *pArray, *pArgs;
 
@@ -81,5 +85,7 @@ mtcnn_detect_results MtcnnDetector::detectFaces(const cv::Mat& mat) {
       results.pointGroups.push_back(points);
     }
     Py_XDECREF(pValue);
+    PyGILState_Release(gstate);
+    PyEval_RestoreThread(state);
     return results;
 }
