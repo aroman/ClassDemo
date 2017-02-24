@@ -14,24 +14,41 @@ struct rect {
     double y;
     double width;
     double height;
+    void scaleAboutCenter(double scale);
 };
 
 struct faceData {
     rect r;
+    int depth;
+
+    //scales it about it's center
+    
+
+    void draw();
 };
 
 class bufferFrame {
 public:
     ofPixels pRGB;
-    ofFloatPixels pDepth;
+    ofPixels pSmallRGB; //pRGB scaled down by rgbShrink
+    //ofFloatPixels pDepth;
     ofFloatPixels pBigDepth;
+    ofPixels render;
+
+    bool doRender = false;
+
+    double rgbShrink = 3.0;
 
     bool hasData = false;
+
+
+    ofTrueTypeFont font;
 
     vector<faceData> faces;
 
     void draw();
     void findFaces(FaceDetector *faceDetector);
+    void getFaceDepth();
 };
 
 class figKinect {

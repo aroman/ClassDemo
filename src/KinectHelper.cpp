@@ -17,7 +17,7 @@ bool KinectHelper::connect() {
     return false;
   }
 
-  libfreenect2::PacketPipeline *pipeline = new libfreenect2::OpenGLPacketPipeline();
+  libfreenect2::PacketPipeline *pipeline = new libfreenect2::OpenCLPacketPipeline();
   device = freenect2.openDevice(freenect2.getDefaultDeviceSerialNumber(), pipeline);
   if (device == NULL) {
     std::cerr << "Failure opening Kinect device" << std::endl;
