@@ -14,6 +14,7 @@ struct rect {
     double y;
     double width;
     double height;
+    void draw();
 };
 
 struct faceData {
@@ -27,12 +28,34 @@ public:
     ofFloatPixels pDepth;
     ofFloatPixels pBigDepth;
 
+
     bool hasData = false;
+    bool isDrawing = false;
 
     vector<faceData> faces;
 
     void draw();
     void findFaces(FaceDetector *faceDetector);
+
+    void setupModel();
+
+
+    float fx, fy, cx, cy;
+    vector<LandmarkDetector::CLNF> models;
+    vector<LandmarkDetector::FaceModelParameters> model_parameters;
+    vector<bool> active_models;
+
+
+
+    void getPoses();
+
+    void detectLandmarks();
+
+    //void visualizeTracking();
+
+    void drawPoses();
+
+
 };
 
 class figKinect {
@@ -46,6 +69,7 @@ public:
     void setup();
     void update();
     void draw();
+
 
 private:
     KinectHelper *kinect = NULL;
