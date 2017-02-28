@@ -3,19 +3,17 @@
 #include "ofMain.h"
 #include "ofxCv.h"
 #include "KinectHelper.h"
-#include "LandmarkCoreIncludes.h"
-#include <FaceAnalyser.h>
 #include "FaceDetector.hpp"
+#include "OpenFace.h"
 
 typedef long long frameTime;
-
-struct rect {
-    double x;
-    double y;
-    double width;
-    double height;
-    void draw();
-};
+// 
+// struct rect {
+//     double x;
+//     double y;
+//     double width;
+//     double height;
+// };
 
 struct faceData {
     rect r;
@@ -36,24 +34,17 @@ public:
 
     void draw();
     void findFaces(FaceDetector *faceDetector);
+    void detectLandmarks(OpenFace *openFace);
 
-    void setupModel();
+    // void setupModel();
 
+    // void getPoses();
 
-    float fx, fy, cx, cy;
-    vector<LandmarkDetector::CLNF> models;
-    vector<LandmarkDetector::FaceModelParameters> model_parameters;
-    vector<bool> active_models;
-
-
-
-    void getPoses();
-
-    void detectLandmarks();
+    // void detectLandmarks();
 
     //void visualizeTracking();
 
-    void drawPoses();
+    // void drawPoses();
 
 
 };
@@ -75,6 +66,7 @@ private:
     KinectHelper *kinect = NULL;
     bufferFrame *frame = NULL;
     FaceDetector *faceDetector = NULL;
+    OpenFace *openFace = NULL;
 };
 
 class ofApp : public ofBaseApp {
