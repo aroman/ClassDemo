@@ -3,6 +3,7 @@
 #include "LandmarkCoreIncludes.h"
 #include <FaceAnalyser.h>
 #include "MtcnnDetector.h"
+#include "tbb/tbb.h"
 
 struct rect {
     double x;
@@ -11,22 +12,40 @@ struct rect {
     double height;
 };
 
+struct faceData {
+    rect r;
+    vector<double> points;
+};
+
+struct FaceTracker {
+  int faceIndex;
+  LandmarkDetector::CLNF model;
+  LandmarkDetector::FaceModelParameters parameters;
+  bool isActive;
+};
+
 class OpenFace : public ofThread  {
 
 public:
   OpenFace();
-  void detectLandmarks(ofPixels rgb, vector<mtcnn_face_bbox> bboxes);
-  void detectSolo(ofPixels rgb, rect box);
+  void updateFaces(vector<faceData> newFaces);
+  void updateImage(ofPixels rgb);
+  void drawTo(cv::Mat mat);
   bool isSetup;
-
-private:
   void doSetup();
 
+private:
   void threadedFunction();
+  void updateTrackers();
+
+  bool isFaceAtIndexAlreadyBeingTracked(int face_ind);
 
   float fx, fy, cx, cy;
-  vector<LandmarkDetector::CLNF> models;
-  vector<LandmarkDetector::FaceModelParameters> model_parameters;
-  vector<bool> active_models;
+
+  bool isMatDirty;
+  cv::Mat matGrayscale;
+
+  vector<cv::Rect> faces;
+  vector<FaceTracker> trackers;
 
 };

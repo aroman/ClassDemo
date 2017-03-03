@@ -1,87 +1,8 @@
-#include <iostream>
 #include "ofApp.h"
-#include <GazeEstimation.h>
+
+#define USE_CREEPYFACES false
 
 using namespace std;
-
-// bufferFrame
-
-    // void visualizeTracking(cv::Mat& captured_image, const LandmarkDetector::CLNF& face_model, const LandmarkDetector::FaceModelParameters& det_parameters, cv::Point3f gazeDirection0, cv::Point3f gazeDirection1, double fx, double fy, double cx, double cy) {
-    //     cout << "visualizeTracking" << endl;
-    //     // Drawing the facial landmarks on the face and the bounding box around it if tracking is successful and initialised
-    //     double detection_certainty = face_model.detection_certainty;
-    //     bool detection_success = face_model.detection_success;
-    //     double visualisation_boundary = 0.2;
-    //
-    //     // Only draw if the reliability is reasonable, the value is slightly ad-hoc
-    //     //if (detection_certainty < visualisation_boundary) {
-    //     if(true){
-    //         cout << "overriding certainty if statement" << endl;
-    //         LandmarkDetector::Draw(captured_image, face_model);
-    //         double vis_certainty = detection_certainty;
-    //         if (vis_certainty > 1)
-    //             vis_certainty = 1;
-    //         if (vis_certainty < -1)
-    //             vis_certainty = -1;
-    //         vis_certainty = (vis_certainty + 1) / (visualisation_boundary + 1);
-    //         // A rough heuristic for box around the face width
-    //         int thickness = (int)std::ceil(2.0* ((double)captured_image.cols) / 640.0);
-    //         cv::Vec6d pose_estimate_to_draw = LandmarkDetector::GetCorrectedPoseWorld(face_model, fx, fy, cx, cy);
-    //         // Draw it in reddish if uncertain, blueish if certain
-    //         LandmarkDetector::DrawBox(captured_image, pose_estimate_to_draw, cv::Scalar((1 - vis_certainty)*255.0, 0, vis_certainty * 255), thickness, fx, fy, cx, cy);
-    //         if (det_parameters.track_gaze && detection_success && face_model.eye_model) {
-    //             cout << "drawGaze" << endl;
-    //             FaceAnalysis::DrawGaze(captured_image, face_model, gazeDirection0, gazeDirection1, fx, fy, cx, cy);
-    //         }
-    //         else {
-    //             cout << "complained but gonan drawGaze anyway" << endl;
-    //             FaceAnalysis::DrawGaze(captured_image, face_model, gazeDirection0, gazeDirection1, fx, fy, cx, cy);
-    //         }
-    //     }
-    // }
-    //
-    // void bufferFrame::drawPoses() {
-    //     cout << "draw " << NUM_FACES_MAX << " Poses" << endl;
-    //     // Go through every model and visualise the results
-    //     for (size_t model_ind = 0; model_ind < NUM_FACES_MAX; ++model_ind) {
-    //         if (!models[model_ind].detection_success) {
-    //             cout << "bad" << endl;
-    //             continue;
-    //         }
-    //         cout << "good" << endl;
-    //         // Gaze tracking, absolute gaze direction
-    //         cv::Point3f gazeDirection0(0, 0, -1);
-    //         cv::Point3f gazeDirection1(0, 0, -1);
-    //         FaceAnalysis::EstimateGaze(models[model_ind], gazeDirection0, fx, fy, cx, cy, true);
-    //         FaceAnalysis::EstimateGaze(models[model_ind], gazeDirection1, fx, fy, cx, cy, false);
-    //
-    //         // Do face alignment
-    //         cv::Mat sim_warped_img;
-    //         cv::Mat_<double> hog_descriptor;
-    //
-    //         // Work out the pose of the head from the tracked model
-    //         cv::Vec6d pose_estimate;
-    //         // XXX: @avi do we want world coordinates?
-    //         pose_estimate = LandmarkDetector::GetCorrectedPoseWorld(models[model_ind], fx, fy, cx, cy);
-    //
-    //         cout << "get RGB" << endl;
-    //         //texRGB.loadData(pRGB);
-    //
-    //         ofTexture temp;
-    //         //temp.allocate(1920,1080,4);
-    //         temp.loadData(pRGB);
-    //
-    //         ofPixels texPixels;
-    //         temp.readToPixels(texPixels);
-    //
-    //         cv::Mat matForDrawing = ofxCv::toCv(texPixels);
-    //         visualizeTracking(matForDrawing, models[model_ind], model_parameters[model_ind], gazeDirection0, gazeDirection1, fx, fy, cx, cy);
-    //
-    //         temp.loadData(texPixels);
-    //         temp.draw(0,0);
-    //         //texRGB.loadData(texPixels);
-    //     }
-    // }
 
     void bufferFrame::draw() {
         if (!hasData) return;
@@ -90,71 +11,60 @@ using namespace std;
         tRGB.loadData(pRGB);
         tRGB.draw(0,0);
 
-        // for(int i = 0; i < pDepth.size(); i++){
-        //     // pixels[i] = ofMap(rawDepthPixels[i], minDistance, maxDistance, 255, 0, true);
-        //     pDepth[i] /= 4500;
-        // }
         ofTexture tDepth;
         tDepth.loadData(pDepth);
         tDepth.draw(0, 360, 640, 360);
 
         ofTexture tBigDepth;
-        // tBigDepth.setTextureMinMagFilter(GL_NEAREST, GL_NEAREST);
         tBigDepth.loadData(pBigDepth);
         tBigDepth.draw(640, 0, 640, 360);
 
-        // cout << "draw some poses" << endl;
-        // drawPoses();
+        if (USE_CREEPYFACES) {
+          for (int i = 0; i < faces.size(); i++) {
+              rect r = faces[i].r;
 
-        for (int i = 0; i < faces.size(); i++) {
-            rect r = faces[i].r;
+              ofPath p;
+              p.setFillColor(ofColor::blue);
+              p.rectangle(r.x,
+                          r.y,
+                          r.width,
+                          r.height);
 
-            ofPath p;
-            p.setFillColor(ofColor::blue);
-            p.rectangle(r.x,
-                        r.y,
-                        r.width,
-                        r.height);
+              p.rectangle(r.x + (r.width*0.1),
+                          r.y + (r.height*0.1),
+                          (r.width*0.8),
+                          (r.height*0.8));
 
-            p.rectangle(r.x + (r.width*0.1),
-                        r.y + (r.height*0.1),
-                        (r.width*0.8),
-                        (r.height*0.8));
+              p.draw();
 
-            p.draw();
+              ofPath p1;
+              p1.setFillColor(ofColor(0, 255, 255, 200));
+              p1.circle(faces[i].points[0], faces[i].points[5], r.width*0.05);
+              p1.close();
+              p1.circle(faces[i].points[1], faces[i].points[6], r.width*0.05);
+              p1.close();
+              p1.circle(faces[i].points[2], faces[i].points[7], r.width*0.05);
+              p1.close();
+              p1.circle(faces[i].points[3], faces[i].points[8], r.width*0.05);
+              p1.close();
+              p1.circle(faces[i].points[4], faces[i].points[9], r.width*0.05);
+              p1.close();
+              p1.draw();
 
-            // ofPath p1;
-            // p1.setFillColor(ofColor(0, 255, 255, 200));
-            // p1.circle(faces[i].points[0], faces[i].points[5], r.width*0.05);
-            // p1.close();
-            // p1.circle(faces[i].points[1], faces[i].points[6], r.width*0.05);
-            // p1.close();
-            // p1.circle(faces[i].points[2], faces[i].points[7], r.width*0.05);
-            // p1.close();
-            // p1.circle(faces[i].points[3], faces[i].points[8], r.width*0.05);
-            // p1.close();
-            // p1.circle(faces[i].points[4], faces[i].points[9], r.width*0.05);
-            // p1.close();
-            // p1.draw();
-            //
-            // int eye_size = 14;
-            //
-            // tRGB.drawSubsection(r.x, r.y, 50, 50, faces[i].points[0] - (eye_size / 2), faces[i].points[5] - (eye_size / 2), eye_size, eye_size);
-            // tRGB.drawSubsection(r.x + (r.width/2) + (r.width/2), r.y, 50, 50, faces[i].points[1] - (eye_size / 2), faces[i].points[6] - (eye_size / 2), eye_size, eye_size);
-            // tRGB.drawSubsection(
-            //   r.x + (r.width/4),
-            //   r.y + (r.height/2),
-            //   100,
-            //   50,
-            //   faces[i].points[3], // x
-            //   faces[i].points[8] - (r.height *0.1), // y
-            //   faces[i].points[4] - faces[i].points[3],
-            //   r.height * 0.20);
+              int eye_size = 14;
 
-          // float *pixels = pBigDepth.getData();
-          // int closePixel = static_cast<int>(r.x * r.y);
-          // int closePixel = 1920*50 + 600;
-          // ofDrawBitmapStringHighlight(std::to_string(pixels[closePixel]), r.x, r.y);
+              tRGB.drawSubsection(r.x, r.y, 50, 50, faces[i].points[0] - (eye_size / 2), faces[i].points[5] - (eye_size / 2), eye_size, eye_size);
+              tRGB.drawSubsection(r.x + (r.width/2) + (r.width/2), r.y, 50, 50, faces[i].points[1] - (eye_size / 2), faces[i].points[6] - (eye_size / 2), eye_size, eye_size);
+              tRGB.drawSubsection(
+                r.x + (r.width/4),
+                r.y + (r.height/2),
+                100,
+                50,
+                faces[i].points[3], // x
+                faces[i].points[8] - (r.height *0.1), // y
+                faces[i].points[4] - faces[i].points[3],
+                r.height * 0.20);
+        }
         }
     }
 
@@ -187,12 +97,16 @@ using namespace std;
     }
 
 
-    void bufferFrame::detectLandmarks(OpenFace *openFace) {
+    void bufferFrame::updateOpenFace(OpenFace *openFace) {
       if (faces.size() == 0) return;
-      faceData face = faces[0];
 
       if (openFace->isSetup) {
-        openFace->detectSolo(pRGB, face.r);
+        openFace->updateFaces(faces);
+        openFace->updateImage(pRGB);
+        cv::Mat mat;
+        cv::cvtColor(ofxCv::toCv(pRGB), mat, CV_BGRA2RGB);
+        // openFace->drawTo(mat);
+        ofxCv::toOf(mat, pRGB);
       }
     }
 
@@ -200,6 +114,10 @@ using namespace std;
 
     void figKinect::setup() {
         // cout << "figKinect::setup()" << endl;
+        if (openFace != NULL) delete openFace;
+        openFace = new OpenFace();
+        openFace->doSetup();
+        openFace->startThread(true);
 
         if (kinect != NULL) delete kinect;
         kinect = new KinectHelper();
@@ -211,10 +129,6 @@ using namespace std;
 
         if (frame == NULL) frame = new bufferFrame();
         frame->hasData = false;
-
-        if (openFace != NULL) delete openFace;
-        openFace = new OpenFace();
-        openFace->startThread(true);
 
         faceDetector = new FaceDetector();
         faceDetector->startThread(true);
@@ -229,7 +143,7 @@ using namespace std;
         frame->pBigDepth = kinect->getBigDepthPixels();
         frame->hasData = (frame->pRGB.size() > 0);
         frame->findFaces(faceDetector);
-        frame->detectLandmarks(openFace);
+        frame->updateOpenFace(openFace);
     }
 
     void figKinect::draw() {

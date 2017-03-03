@@ -1,8 +1,8 @@
 #include "OpenFace.h"
-#include "tbb/tbb.h"
 
-#define NUM_FACES_MAX 5
-static const int MODEL_MAX_FAILURES_IN_A_ROW = 4;
+static const int NUM_FACES_MAX = 5; // 8
+static const int MAX_MODEL_FAILURES_IN_A_ROW = 3;
+static const double MIN_CERTAINTY_FOR_VISUALIZATION = 0.2;
 
 OpenFace::OpenFace() {
   isSetup = false;
@@ -10,9 +10,9 @@ OpenFace::OpenFace() {
 
 void OpenFace::threadedFunction() {
     while(isThreadRunning()) {
-      if (!isSetup) {
-        doSetup();
-        isSetup = true;
+      if (!isSetup) continue;
+      if (isMatDirty) {
+        updateTrackers();
       }
     }
 }
@@ -20,6 +20,7 @@ void OpenFace::threadedFunction() {
 void OpenFace::doSetup() {
     LandmarkDetector::FaceModelParameters default_parameters;
 
+    // maybe try turning it off, doesn't make much difference
     default_parameters.use_face_template = true;
     // Model should not try to re-initialising itself
     // TODO @avi more accurate comment
@@ -30,99 +31,102 @@ void OpenFace::doSetup() {
     LandmarkDetector::CLNF default_model(default_parameters.model_location);
 
     //int NUM_FACES_MAX = faces.size(); //current number of faces
-    models.clear();
-    models.reserve(NUM_FACES_MAX);
+    trackers.clear();
+    trackers.reserve(NUM_FACES_MAX);
 
-    cout << "making " << NUM_FACES_MAX << endl;
     for (int i = 0; i < NUM_FACES_MAX; ++i) {
-        models.push_back(default_model);
-        model_parameters.push_back(default_parameters);
-        active_models.push_back(false);
+      ofLogNotice("OpenFace") << "Pushing back model #" << i;
+      trackers.push_back(FaceTracker{
+        -1,
+        default_model,
+        default_parameters,
+        false
+      });
     }
+    isSetup = true;
+    ofLogNotice("OpenFace") << "doSetup() finished";
 }
 
-void OpenFace::detectSolo(ofPixels rgb, rect box) {
-  // cv::Rect box_cv(box.x - box.width*0.1, box.y - box.height*0.1, box.width*1.2, box.height*1.2);
-  cv::Rect box_cv(0, 0, 640, 360);
-
-
-  cv::Mat matGrayscale;
-  cv::cvtColor(ofxCv::toCv(rgb), matGrayscale, CV_BGR2GRAY);
-  LandmarkDetector::CLNF localModel = models[0];
-  LandmarkDetector::FaceModelParameters localParams = model_parameters[0];
-
-  LandmarkDetector::CLNF globalModel = models[1];
-  LandmarkDetector::FaceModelParameters globalParams = model_parameters[1];
-
-  // Reinitialise the model
-  localModel.Reset();
-
-  // This ensures that a wider window is used for the initial landmark localisation
-  localModel.detection_success = false;
-  bool localSuccess = LandmarkDetector::DetectLandmarksInVideo(matGrayscale, localModel, localParams);
-  std::cout << "detection success = " << localSuccess << '\n';
-
-  globalModel.Reset();
-
-  // This ensures that a wider window is used for the initial landmark globalisation
-  globalModel.detection_success = false;
-  bool globalSuccess = LandmarkDetector::DetectLandmarksInVideo(matGrayscale, box_cv, globalModel, globalParams);
-  std::cout << "detection success = " << globalSuccess << '\n';
+void OpenFace::updateImage(ofPixels rgb) {
+  cv::Mat newGrayscale;
+  cv::cvtColor(ofxCv::toCv(rgb), newGrayscale, CV_BGR2GRAY);
+  newGrayscale.copyTo(matGrayscale);
+  isMatDirty = true;
 }
 
-// void OpenFace::detectLandmarks(ofPixels rgb, vector<mtcnn_face_bbox> bboxes) {
-//     cout << "detectLandmarks" << endl;
-//     cv::Mat matGrayscale;
-//     cv::cvtColor(ofxCv::toCv(rgb), matGrayscale, CV_BGR2GRAY);
-//
-//     bool detection_success = false;
-//
-//     // This is useful for a second pass run (if want AU predictions)
-//     vector<cv::Vec6d> params_global_video;
-//     vector<bool> successes_video;
-//     vector<cv::Mat_<double>> params_local_video;
-//     vector<cv::Mat_<double>> detected_landmarks_video;
-//
-//     // also convert to a concurrent vector
-//     //vector<tbb::atomic<bool>> faces_used(faceDetector.faces_detected.size());
-//
-//     cout << "going parallel" << endl;
-//     // Go through every model and update the tracking
-//     tbb::parallel_for(0, (int)models.size(), [&](int model_ind) {
-//         // If the current model has failed more than MODEL_MAX_FAILURES_IN_A_ROW, remove it
-//         if (models[model_ind].failures_in_a_row > MODEL_MAX_FAILURES_IN_A_ROW) {
-//             active_models[model_ind] = false;
-//             ofLog() << "Resetting model #" << model_ind;
-//             models[model_ind].Reset();
-//         }
-//
-//         // If the model is inactive reactivate it with new detections
-//         if (!active_models[model_ind]) {
-//             cout << "reactivated model " << model_ind << endl;
-//             //for (size_t detection_ind = 0; detection_ind < faceDetector.faces_detected.size(); ++detection_ind) {
-//             for (size_t detection_ind = 0; detection_ind < NUM_FACES_MAX; ++detection_ind) {
-//                 cout << "working on detection " << detection_ind << endl;
-//                 // if it was not taken by another tracker take it (if it is false swap it to true and enter detection, this makes it parallel safe)
-//                 //if (faces_used[detection_ind].compare_and_swap(true, false) == false) {
-//                 if(true){
-//                     // Reinitialise the modelm
-//                     models[model_ind].Reset();
-//                     //
-//                     // // This ensures that a wider window is used for the initial landmark localisation
-//                     // ofLog() << "Reinitializing model #" << model_ind;
-//                     // models[model_ind].detection_success = false;
-//
-//                     detection_success = LandmarkDetector::DetectLandmarksInVideo(matGrayscale, models[model_ind], model_parameters[model_ind]);
-//
-//                     // This activates the model
-//                     active_models[model_ind] = true;
-//
-//                     // break out of the loop as the tracker has been reinitialised
-//                     break;
-//                 }
-//             }
-//         } else {
-//             detection_success = LandmarkDetector::DetectLandmarksInVideo(matGrayscale, models[model_ind], model_parameters[model_ind]);
-//         }
-//     });
-// }
+void OpenFace::updateFaces(vector<faceData> newFaces) {
+  faces.clear();
+  for (int i = 0; i < newFaces.size(); i++) {
+    faceData face = newFaces[i];
+    faces.push_back(cv::Rect(face.r.x, face.r.y, face.r.width * 1.05, face.r.height * 1.05));
+  }
+}
+
+bool OpenFace::isFaceAtIndexAlreadyBeingTracked(int face_ind) {
+  for (auto const &t : trackers) {
+    if (t.faceIndex == face_ind) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void OpenFace::drawTo(cv::Mat mat) {
+  for (auto const &tracker : trackers) {
+    if (!tracker.isActive) continue;
+    // double detectionCertainty = -tracker.model.detection_certainty;
+    // if (detectionCertainty < MIN_CERTAINTY_FOR_VISUALIZATION) {
+    //   ofLogNotice("OpenFace") << "Skipping because tracking below min certainty: " << detectionCertainty;
+    //   continue;
+    // }
+    LandmarkDetector::Draw(mat, tracker.model);
+  }
+}
+
+void OpenFace::updateTrackers() {
+  ofLogNotice("OpenFace") << "OpenFace::updateTrackers";
+
+  for (auto &tracker : trackers) {
+    // Try to update active models, or reset them if they've stopped tracking.
+    if (tracker.isActive == true) {
+      bool didContinueTrackingSuccessfully = LandmarkDetector::DetectLandmarksInVideo(
+        matGrayscale,
+        tracker.model,
+        tracker.parameters
+      );
+      if (didContinueTrackingSuccessfully) {
+        continue;
+      }
+      if (tracker.model.failures_in_a_row > MAX_MODEL_FAILURES_IN_A_ROW) {
+        ofLogNotice("OpenFace") << "Resetting tracker";
+        tracker.isActive = false;
+        tracker.faceIndex = -1;
+        tracker.model.Reset();
+      // This ensures that a wider window is used for the initial landmark localisation
+        tracker.model.detection_success = false;
+      }
+    }
+
+    for (int face_ind = 0; face_ind < faces.size(); face_ind++) {
+      if (isFaceAtIndexAlreadyBeingTracked(face_ind)) {
+        continue;
+      }
+
+      // Note: We ARE passing a bounding box in
+      bool didBeginTrackingSuccessfully = LandmarkDetector::DetectLandmarksInVideo(
+        matGrayscale,
+        faces[face_ind],
+        tracker.model,
+        tracker.parameters
+      );
+
+      ofLogNotice("OpenFace") << "didBeginTrackingSuccessfully = " << didBeginTrackingSuccessfully;
+      if (!didBeginTrackingSuccessfully) {
+        // We don't want other trackers to bother attempting with this one
+        return;
+      }
+      tracker.isActive = true;
+      tracker.faceIndex = face_ind;
+    }
+  }
+}

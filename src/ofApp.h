@@ -3,22 +3,11 @@
 #include "ofMain.h"
 #include "ofxCv.h"
 #include "KinectHelper.h"
-#include "FaceDetector.hpp"
 #include "OpenFace.h"
+#include <GazeEstimation.h>
+#include "FaceDetector.hpp"
 
 typedef long long frameTime;
-// 
-// struct rect {
-//     double x;
-//     double y;
-//     double width;
-//     double height;
-// };
-
-struct faceData {
-    rect r;
-    vector<double> points;
-};
 
 class bufferFrame {
 public:
@@ -34,9 +23,7 @@ public:
 
     void draw();
     void findFaces(FaceDetector *faceDetector);
-    void detectLandmarks(OpenFace *openFace);
-
-    // void setupModel();
+    void updateOpenFace(OpenFace *openFace);
 
     // void getPoses();
 
