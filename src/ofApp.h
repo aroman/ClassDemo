@@ -14,18 +14,51 @@ struct rect {
     double y;
     double width;
     double height;
+
+    //scales it about it's center
     void scaleAboutCenter(double scale);
 };
 
-struct faceData {
+struct region {
     rect r;
-    int depth;
 
-    //scales it about it's center
-    
+    ofImage imRGB;
 
-    void draw();
+    ofImage imDepth;
+    ofFloatPixels ofpDepth;
+    float* fDepth;
+
+    int numPixels;
+
+    float minDepth;
+    float maxDepth;
+    float avgDepth;
+    float avgDepthDiff;
+
+    void doDepthStats(rect r);
+    void doDepthAverage(rect r);
+    void doDepthVariance(rect r);
+    void doDepthMinMax(rect r);
+    void updateDepth(ofFloatPixels pDepth);
+    void updateRGB(ofPixels pRGB);
+    void free();
 };
+
+struct person {
+    region f;
+    region h;
+
+    bool raisedHand = false;
+
+    ofTrueTypeFont font;
+
+    void drawFrontView();
+    void drawTopView();
+    void init(ofPixels pRGB, ofFloatPixels pBigDepth);
+    void update(ofPixels pRGB, ofFloatPixels pBigDepth);
+    void free();
+};
+
 
 class bufferFrame {
 public:
@@ -35,20 +68,25 @@ public:
     ofFloatPixels pBigDepth;
     ofPixels render;
 
+
+   
+
     bool doRender = false;
 
     double rgbShrink = 3.0;
-
     bool hasData = false;
+    bool toggleView;
 
 
     ofTrueTypeFont font;
 
-    vector<faceData> faces;
+    vector<person> people;
 
     void draw();
-    void findFaces(FaceDetector *faceDetector);
-    void getFaceDepth();
+    void drawFrontView();
+    void drawTopView();
+    void initPeople(FaceDetector *faceDetector);
+    void findPeople(FaceDetector *faceDetector);
 };
 
 class figKinect {
@@ -62,6 +100,8 @@ public:
     void setup();
     void update();
     void draw();
+
+    bool toggleView;
 
 private:
     KinectHelper *kinect = NULL;
