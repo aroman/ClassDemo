@@ -6,47 +6,7 @@
 #include "OpenFace.h"
 #include <GazeEstimation.h>
 #include "FaceDetector.h"
-
-struct region {
-  rect r;
-
-  ofImage imRGB;
-
-  ofImage imDepth;
-  ofFloatPixels ofpDepth;
-  float* fDepth;
-
-  int numPixels;
-
-  float minDepth;
-  float maxDepth;
-  float avgDepth;
-  float avgDepthDiff;
-
-  void doDepthStats(rect r);
-  void doDepthAverage(rect r);
-  void doDepthVariance(rect r);
-  void doDepthMinMax(rect r);
-  void updateDepth(ofFloatPixels pDepth);
-  void updateRGB(ofPixels pRGB);
-  void free();
-};
-
-struct person {
-
-  person();
-
-  region f; // face
-  region h; // hand-raise area
-
-  bool raisedHand = false;
-
-  void drawFrontView() const;
-  void drawTopView() const;
-  void init(ofPixels pRGB, ofFloatPixels pBigDepth);
-  void update(ofPixels pRGB, ofFloatPixels pBigDepth);
-  void free();
-};
+#include "Person.h"
 
 class ClassVisualizer {
 
@@ -67,8 +27,7 @@ private:
   bool hasData = false;
   bool isDataStale = false;
 
-  vector<person> people;
-  vector<faceData> faces;
+  vector<Person> people;
 
   void drawFrontView();
   void drawTopView();

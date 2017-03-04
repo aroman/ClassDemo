@@ -58,11 +58,11 @@ void OpenFace::updateImage(ofPixels rgb) {
   isMatDirty = true;
 }
 
-void OpenFace::updateFaces(vector<faceData> newFaces) {
+void OpenFace::updateFaces(vector<rect> newFaces) {
   faces.clear();
   for (int i = 0; i < newFaces.size(); i++) {
-    faceData face = newFaces[i];
-    faces.push_back(cv::Rect(face.r.x, face.r.y, face.r.width * 1.05, face.r.height * 1.05));
+    rect r = newFaces[i];
+    faces.push_back(cv::Rect(r.x, r.y, r.width * 1.05, r.height * 1.05));
   }
 }
 

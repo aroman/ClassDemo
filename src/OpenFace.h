@@ -6,21 +6,7 @@
 #include <FaceAnalyser.h>
 #include "MtcnnDetector.h"
 #include "tbb/tbb.h"
-
-struct rect {
-  double x;
-  double y;
-  double width;
-  double height;
-
-  //scales it about it's center
-  void scaleAboutCenter(double scale);
-};
-
-struct faceData {
-    rect r;
-    vector<double> points;
-};
+#include "Person.h"
 
 struct FaceTracker {
   int faceIndex;
@@ -34,7 +20,7 @@ class OpenFace : public ofThread  {
 public:
   OpenFace();
   ~OpenFace();
-  void updateFaces(vector<faceData> newFaces);
+  void updateFaces(vector<rect> newFaces);
   void updateImage(ofPixels rgb);
   void drawTo(cv::Mat mat);
   bool isSetup;
