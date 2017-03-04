@@ -50,6 +50,7 @@ void FaceDetector::threadedFunction() {
     TS_START("detector->detectFaces");
     detectedFaces = detector->detectFaces(imageScaledMat);
     TS_STOP("detector->detectFaces");
+    ofNotifyEvent(onNewResults, detectedFaces);
 
   }
 }

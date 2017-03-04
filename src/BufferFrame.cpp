@@ -353,7 +353,8 @@ BufferFrame::BufferFrame() {
   faceDetector->startThread(true);
   // Might help performance a bit, we don't want it stealing CPU time
   // from the main/GL/draw thread!
-  (&faceDetector->getPocoThread())->setPriority(Poco::Thread::PRIO_LOWEST);
+  // (&faceDetector->getPocoThread())->setPriority(Poco::Thread::PRIO_LOWEST);
+  ofAddListener(faceDetector->onNewResults, this, &BufferFrame::onNewFaceDetectorResults);
 }
 
 BufferFrame::~BufferFrame() {
@@ -384,7 +385,7 @@ void BufferFrame::update() {
   tRender.loadData(pRGB);
   TS_STOP("loadData");
 
-  initPeople();
+  faceDetector->updateImage(&pRGB);
   // updateOpenFace();
 }
 
@@ -506,15 +507,18 @@ void BufferFrame::initPeople() {
   // }
 }
 
+void BufferFrame::onNewFaceDetectorResults(mtcnn_detect_results &newResults) {
+  ofLogNotice("BufferFrame") << "onNewFaceDetectorResults" << newResults.bboxes.size();
+  initPeople();
+}
+
 void BufferFrame::findPeople() {
   // ofLogNotice("BufferFrame") << "BufferFrame::findPeople";
-  //
-  // for (auto &person : people) {
-  //   person.free();
-  // }
-  // people.clear();
 
-  TS(faceDetector->updateImage(&pRGB));
+  for (auto &person : people) {
+    person.free();
+  }
+  people.clear();
 
   // ofLogNotice("BufferFrame") << "people detected" << faceDetector->detectedFaces.bboxes.size();
 

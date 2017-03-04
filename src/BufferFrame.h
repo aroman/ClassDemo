@@ -55,14 +55,14 @@ class BufferFrame {
 public:
   BufferFrame();
   ~BufferFrame();
-  bool toggleView;
+  bool toggleView = false;
   void update();
   void draw();
+  void onNewFaceDetectorResults(mtcnn_detect_results &newResults);
 
 private:
   ofPixels pRGB;
   ofFloatPixels pBigDepth;
-  // ofPixels render;
   ofTexture tRender;
   ofTrueTypeFont font;
 

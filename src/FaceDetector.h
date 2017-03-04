@@ -16,6 +16,7 @@ public:
     void updateImage(ofPixels *newImage);
 
     mtcnn_detect_results detectedFaces;
+    ofEvent<mtcnn_detect_results> onNewResults;
 
 private:
     MtcnnDetector *detector;
