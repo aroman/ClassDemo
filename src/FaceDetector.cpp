@@ -47,10 +47,19 @@ void FaceDetector::threadedFunction() {
     cv::cvtColor(imageScaledMat, imageScaledMat, CV_RGBA2RGB);
 
     yield();
+    mtcnn_detect_results results;
     TS_START("detector->detectFaces");
-    detectedFaces = detector->detectFaces(imageScaledMat);
+    results = detector->detectFaces(imageScaledMat);
     TS_STOP("detector->detectFaces");
-    ofNotifyEvent(onNewResults, detectedFaces);
+    yield();
+
+    for (auto &bbox : results.bboxes) {
+      bbox.x1 *= DOWNSCALE_FACTOR;
+      bbox.x2 *= DOWNSCALE_FACTOR;
+      bbox.y1 *= DOWNSCALE_FACTOR;
+      bbox.y2 *= DOWNSCALE_FACTOR;
+    }
+    ofNotifyEvent(onDetectionResults, results);
 
   }
 }

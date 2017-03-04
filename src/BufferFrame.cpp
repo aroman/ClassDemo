@@ -205,10 +205,9 @@ void person::drawTopView() {
   }
 
   //ofSetColor(ofColor::red);
-  // font.load(OF_TTF_MONO, 15);
-  font.drawString("avg: " + ofToString(f.avgDepth), r.x, r.y + r.height - 15);
-  //font.drawString("min: " + ofToString(f.minDepth), r.x, r.y + r.height - 30);
-  //font.drawString("max: " + ofToString(f.maxDepth), r.x, r.y + r.height - 45);
+  ofDrawBitmapString("avg: " + ofToString(f.avgDepth), r.x, r.y + r.height - 15);
+  //ofDrawBitmapString("min: " + ofToString(f.minDepth), r.x, r.y + r.height - 30);
+  //ofDrawBitmapString("max: " + ofToString(f.maxDepth), r.x, r.y + r.height - 45);
 
   //ofSetColor(ofColor::black);
 }
@@ -239,11 +238,9 @@ void person::drawFrontView() {
   }
 
   //ofSetColor(ofColor::red);
-  // font.load(OF_TTF_MONO, 15, true, true);
-  // font.load(OF_TTF_MONO, 15);
-  font.drawString("avg: " + ofToString(f.avgDepth), f.r.x, f.r.y - 15);
-  font.drawString("min: " + ofToString(f.minDepth), f.r.x, f.r.y - 30);
-  //font.drawString("max: " + ofToString(maxDepth), f.r.x, f.r.y - 45);
+  ofDrawBitmapStringHighlight("avg: " + ofToString(f.avgDepth), f.r.x, f.r.y - 15);
+  ofDrawBitmapStringHighlight("min: " + ofToString(f.minDepth), f.r.x, f.r.y - 30);
+  //ofDrawBitmapStringHighlight("max: " + ofToString(maxDepth), f.r.x, f.r.y - 45);
 
   //ofSetColor(ofColor::black);
 }
@@ -255,12 +252,12 @@ void person::update(ofPixels pRGB, ofFloatPixels pBigDepth) {
   r1.x = (f.r.width - r1.width) / 2.0;
   r1.y = (f.r.height - r1.height) / 2.0;
 
-  return;
   f.updateRGB(pRGB);
   f.updateDepth(pBigDepth);
 
   f.doDepthAverage(r1);
   f.doDepthVariance(r1);
+  return;
 
   r1.x = 0;
   r1.y = 0;
@@ -334,8 +331,6 @@ void person::init(ofPixels pRGB, ofFloatPixels pBigDepth) {
 
 //BufferFrame
 BufferFrame::BufferFrame() {
-  font.load(OF_TTF_MONO, 15);
-
   openFace = new OpenFace();
   // openFace->doSetup();
   // openFace->startThread(true);
@@ -353,8 +348,12 @@ BufferFrame::BufferFrame() {
   faceDetector->startThread(true);
   // Might help performance a bit, we don't want it stealing CPU time
   // from the main/GL/draw thread!
-  // (&faceDetector->getPocoThread())->setPriority(Poco::Thread::PRIO_LOWEST);
-  ofAddListener(faceDetector->onNewResults, this, &BufferFrame::onNewFaceDetectorResults);
+  (&faceDetector->getPocoThread())->setPriority(Poco::Thread::PRIO_LOWEST);
+  ofAddListener(
+    faceDetector->onDetectionResults,
+    this,
+    &BufferFrame::onFaceDetectionResults
+  );
 }
 
 BufferFrame::~BufferFrame() {
@@ -405,7 +404,6 @@ void BufferFrame::updateOpenFace() {
 
 void BufferFrame::draw() {
   if (!hasData) return;
-  // font.load(OF_TTF_MONO, 15);
 
   if (toggleView) {
     drawTopView();
@@ -431,10 +429,10 @@ void BufferFrame::drawFrontView() {
 
   //draw people on top
   for (int i = 0; i < people.size(); i++) {
-    // people[i].drawFrontView();
+    people[i].drawFrontView();
   }
 
-  // font.drawString("Front Facing View", 960, 15);
+  ofDrawBitmapString("Front Facing View", 960, 15);
 
   // if (USE_CREEPYFACES) {
   //   for (int i = 0; i < faces.size(); i++) {
@@ -494,43 +492,31 @@ void BufferFrame::drawTopView() {
     people[i].drawTopView();
   }
 
-  font.drawString("Bird's Eye View", 960, 15);
-  font.drawString("back", 10, 15);
-  font.drawString("front", 10, 1065);
+  ofDrawBitmapString("Bird's Eye View", 960, 15);
+  ofDrawBitmapString("back", 10, 15);
+  ofDrawBitmapString("front", 10, 1065);
 }
 
-void BufferFrame::initPeople() {
-  // ofLogNotice("BufferFrame") << "BufferFrame::initPeople";
-  findPeople();
-  // for (int i = 0; i < people.size(); i++) {
-  //     people[i].init(pRGB, pBigDepth);
-  // }
-}
-
-void BufferFrame::onNewFaceDetectorResults(mtcnn_detect_results &newResults) {
-  ofLogNotice("BufferFrame") << "onNewFaceDetectorResults" << newResults.bboxes.size();
-  initPeople();
-}
-
-void BufferFrame::findPeople() {
-  // ofLogNotice("BufferFrame") << "BufferFrame::findPeople";
+void BufferFrame::onFaceDetectionResults(mtcnn_detect_results &results) {
+  ofLogNotice("BufferFrame") << "onFaceDetectionResults" << results.bboxes.size();
 
   for (auto &person : people) {
     person.free();
   }
   people.clear();
 
-  // ofLogNotice("BufferFrame") << "people detected" << faceDetector->detectedFaces.bboxes.size();
+  people.reserve(results.bboxes.size());
 
-  // increases the capacity
-  // people.reserve(faceDetector->detectedFaces.bboxes.size());
+  for (auto bbox : results.bboxes) {
+    person p;
+    p.f.r.x = bbox.x1;
+    p.f.r.y = bbox.y1;
+    p.f.r.width = abs(bbox.x2 - bbox.x1);
+    p.f.r.height = abs(bbox.y2 - bbox.y1);
+    people.push_back(p);
+  }
 
-  // for (auto bbox : faceDetector->detectedFaces.bboxes) {
-  //   person p;
-  //   p.f.r.x = (bbox.x1) * DOWNSCALE_FACTOR;
-  //   p.f.r.y = (bbox.y1) * DOWNSCALE_FACTOR;
-  //   p.f.r.width = abs(bbox.x2 - bbox.x1) * DOWNSCALE_FACTOR;
-  //   p.f.r.height = abs(bbox.y2 - bbox.y1) * DOWNSCALE_FACTOR;
-  //   people.push_back(p);
-  // }
+  for (auto &person : people) {
+    person.init(pRGB, pBigDepth);
+  }
 }

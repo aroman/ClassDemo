@@ -41,8 +41,6 @@ struct person {
 
   bool raisedHand = false;
 
-  ofTrueTypeFont font;
-
   void drawFrontView();
   void drawTopView();
   void init(ofPixels pRGB, ofFloatPixels pBigDepth);
@@ -58,13 +56,12 @@ public:
   bool toggleView = false;
   void update();
   void draw();
-  void onNewFaceDetectorResults(mtcnn_detect_results &newResults);
+  void onFaceDetectionResults(mtcnn_detect_results &results);
 
 private:
   ofPixels pRGB;
   ofFloatPixels pBigDepth;
   ofTexture tRender;
-  ofTrueTypeFont font;
 
   bool hasData = false;
   bool isDataStale = false;
@@ -75,8 +72,6 @@ private:
   void drawFrontView();
   void drawTopView();
 
-  void initPeople();
-  void findPeople();
   void updateOpenFace();
 
   KinectHelper *kinect = NULL;

@@ -5,8 +5,6 @@
 #include "ofxCv.h"
 #include "MtcnnDetector.h"
 
-static const double DOWNSCALE_FACTOR = 3.0;
-
 class FaceDetector : public ofThread {
 
 public:
@@ -15,8 +13,8 @@ public:
     void threadedFunction();
     void updateImage(ofPixels *newImage);
 
-    mtcnn_detect_results detectedFaces;
-    ofEvent<mtcnn_detect_results> onNewResults;
+    const double DOWNSCALE_FACTOR = 3.0;
+    ofEvent<mtcnn_detect_results> onDetectionResults;
 
 private:
     MtcnnDetector *detector;
