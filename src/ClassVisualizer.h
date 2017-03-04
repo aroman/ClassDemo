@@ -48,15 +48,16 @@ struct person {
   void free();
 };
 
-class BufferFrame {
+class ClassVisualizer {
 
 public:
-  BufferFrame();
-  ~BufferFrame();
+  ClassVisualizer();
+  ~ClassVisualizer();
   bool toggleView = false;
   void update();
   void draw();
   void onFaceDetectionResults(mtcnn_detect_results &results);
+  void onOpenFaceResults();
 
 private:
   ofPixels pRGB;

@@ -1,4 +1,4 @@
-#include "BufferFrame.h"
+#include "ClassVisualizer.h"
 #include "ofxTimeMeasurements.h"
 
 #define USE_CREEPYFACES false
@@ -329,8 +329,8 @@ void person::init(ofPixels pRGB, ofFloatPixels pBigDepth) {
   update(pRGB, pBigDepth);
 }
 
-//BufferFrame
-BufferFrame::BufferFrame() {
+// ClassVisualizer
+ClassVisualizer::ClassVisualizer() {
   openFace = new OpenFace();
   // openFace->doSetup();
   // openFace->startThread(true);
@@ -352,11 +352,11 @@ BufferFrame::BufferFrame() {
   ofAddListener(
     faceDetector->onDetectionResults,
     this,
-    &BufferFrame::onFaceDetectionResults
+    &ClassVisualizer::onFaceDetectionResults
   );
 }
 
-BufferFrame::~BufferFrame() {
+ClassVisualizer::~ClassVisualizer() {
   people.clear();
 
   faceDetector->waitForThread(true);
@@ -369,7 +369,7 @@ BufferFrame::~BufferFrame() {
   delete openFace;
 }
 
-void BufferFrame::update() {
+void ClassVisualizer::update() {
   if (!kinect->isConnected) return;
 
   TS_START("getRgbPixels");
@@ -388,21 +388,7 @@ void BufferFrame::update() {
   // updateOpenFace();
 }
 
-void BufferFrame::updateOpenFace() {
-  return;
-  // if (people.size() == 0) return;
-
-  // if (openFace->isSetup) {
-  //   openFace->updateFaces(faces);
-  //   openFace->updateImage(pRGB);
-  //   cv::Mat mat;
-  //   cv::cvtColor(ofxCv::toCv(pRGB), mat, CV_BGRA2RGB);
-  //   // openFace->drawTo(mat);
-  //   ofxCv::toOf(mat, pRGB);
-  // }
-}
-
-void BufferFrame::draw() {
+void ClassVisualizer::draw() {
   if (!hasData) return;
 
   if (toggleView) {
@@ -412,7 +398,7 @@ void BufferFrame::draw() {
   }
 }
 
-void BufferFrame::drawFrontView() {
+void ClassVisualizer::drawFrontView() {
   tRender.draw(0, 0);
 
   // draw people on top
@@ -471,7 +457,7 @@ void BufferFrame::drawFrontView() {
   // }
 }
 
-void BufferFrame::drawTopView() {
+void ClassVisualizer::drawTopView() {
   // exit if not ready to draw additional:
   // if(!doRender) return;
 
@@ -485,8 +471,8 @@ void BufferFrame::drawTopView() {
   ofDrawBitmapString("front", 10, 1065);
 }
 
-void BufferFrame::onFaceDetectionResults(mtcnn_detect_results &results) {
-  ofLogNotice("BufferFrame") << "onFaceDetectionResults" << results.bboxes.size();
+void ClassVisualizer::onFaceDetectionResults(mtcnn_detect_results &results) {
+  ofLogNotice("ClassVisualizer") << "onFaceDetectionResults" << results.bboxes.size();
 
   for (auto &person : people) {
     person.free();
@@ -507,4 +493,18 @@ void BufferFrame::onFaceDetectionResults(mtcnn_detect_results &results) {
   for (auto &person : people) {
     person.init(pRGB, pBigDepth);
   }
+}
+
+void ClassVisualizer::onOpenFaceResults() {
+  return;
+  // if (people.size() == 0) return;
+
+  // if (openFace->isSetup) {
+  //   openFace->updateFaces(faces);
+  //   openFace->updateImage(pRGB);
+  //   cv::Mat mat;
+  //   cv::cvtColor(ofxCv::toCv(pRGB), mat, CV_BGRA2RGB);
+  //   // openFace->drawTo(mat);
+  //   ofxCv::toOf(mat, pRGB);
+  // }
 }

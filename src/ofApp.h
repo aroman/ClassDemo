@@ -1,12 +1,12 @@
 #pragma once
 
 #include "ofMain.h"
-#include "BufferFrame.h"
+#include "ClassVisualizer.h"
 
 class ofApp : public ofBaseApp {
 
 private:
-  BufferFrame *frame;
+  ClassVisualizer *visualizer;
   void updateKinect();
   void detectLandmarks();
   void detectMxnet();

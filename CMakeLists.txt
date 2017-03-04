@@ -21,7 +21,7 @@ option(COTIRE "Use cotire" ON)
 set(sources
   src/main.cpp
   src/ofApp.cpp
-  src/BufferFrame.cpp
+  src/ClassVisualizer.cpp
   src/KinectHelper.cpp
   src/FaceDetector.cpp
   src/MtcnnDetector.cpp

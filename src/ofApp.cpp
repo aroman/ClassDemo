@@ -2,11 +2,11 @@
 #include <math.h>
 
 void ofApp::setup() {
-  frame = new BufferFrame();
+  visualizer = new ClassVisualizer();
 }
 
 void ofApp::update() {
-  frame->update();
+  visualizer->update();
   std::stringstream strm;
   strm << "(" << floor(ofGetFrameRate()) << " FPS)";
   ofSetWindowTitle(strm.str());
@@ -14,28 +14,28 @@ void ofApp::update() {
 
 void ofApp::draw() {
   // ofClear(0);
-  frame->draw();
+  visualizer->draw();
 }
 
 ofApp::~ofApp() {
   ofLogNotice("ofApp", "Shutting down...");
-  if (frame != NULL) {
-    delete frame;
+  if (visualizer != NULL) {
+    delete visualizer;
   }
 }
 
 // ofApp I/O
 void ofApp::keyPressed(int key) {
-  if (frame == NULL) return;
+  if (visualizer == NULL) return;
   if (key == 32) { // spacebar
-    frame->toggleView = true;
+    visualizer->toggleView = true;
   }
 }
 
 void ofApp::keyReleased(int key) {
-  if (frame == NULL) return;
+  if (visualizer == NULL) return;
   if (key == 32) { // spacebar
-    frame->toggleView = false;
+    visualizer->toggleView = false;
   }
 }
 
