@@ -36,13 +36,13 @@ struct person {
 
   person();
 
-  region f;
-  region h;
+  region f; // face
+  region h; // hand-raise area
 
   bool raisedHand = false;
 
-  void drawFrontView();
-  void drawTopView();
+  void drawFrontView() const;
+  void drawTopView() const;
   void init(ofPixels pRGB, ofFloatPixels pBigDepth);
   void update(ofPixels pRGB, ofFloatPixels pBigDepth);
   void free();

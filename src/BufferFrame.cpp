@@ -186,7 +186,7 @@ void person::free() {
     h.free();
 }
 
-void person::drawTopView() {
+void person::drawTopView() const {
   int imageHeight = 1080;
   //draw faceDepth image
   //f.imDepth.draw(f.r.x,f.r.y);
@@ -212,7 +212,7 @@ void person::drawTopView() {
   //ofSetColor(ofColor::black);
 }
 
-void person::drawFrontView() {
+void person::drawFrontView() const {
   //draw images
   f.imDepth.draw(f.r.x,f.r.y);
   //h.imDepth.draw(h.r.x,h.r.y);
@@ -413,23 +413,11 @@ void BufferFrame::draw() {
 }
 
 void BufferFrame::drawFrontView() {
-  //allocate canvas if we haven't already
-  // if (render.size() == 0) {
-  //   render.allocate(pRGB.getWidth(),pRGB.getHeight(),pRGB.getNumChannels());
-  // }
-  //
-  // //draw RGB for background
-  // pRGB.swapRgb(); //need to swizzle R and B
-  // pRGB.pasteInto(render, 0, 0);
-
   tRender.draw(0, 0);
-  //
-  // //exit if not ready to draw additional:
-  // if (!doRender) return;
 
-  //draw people on top
-  for (int i = 0; i < people.size(); i++) {
-    people[i].drawFrontView();
+  // draw people on top
+  for (auto const &person : people) {
+    person.drawFrontView();
   }
 
   ofDrawBitmapString("Front Facing View", 960, 15);
