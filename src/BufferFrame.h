@@ -75,9 +75,9 @@ private:
   void drawFrontView();
   void drawTopView();
 
-  void initPeople(FaceDetector *faceDetector);
-  void findPeople(FaceDetector *faceDetector);
-  void updateOpenFace(OpenFace *openFace);
+  void initPeople();
+  void findPeople();
+  void updateOpenFace();
 
   KinectHelper *kinect = NULL;
   FaceDetector *faceDetector = NULL;

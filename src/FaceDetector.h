@@ -13,7 +13,7 @@ public:
     FaceDetector();
     ~FaceDetector();
     void threadedFunction();
-    void updateImage(ofPixels newImage);
+    void updateImage(ofPixels *newImage);
 
     mtcnn_detect_results detectedFaces;
 
@@ -21,7 +21,7 @@ private:
     MtcnnDetector *detector;
     bool isImageDirty;
 
-    ofPixels image;
+    ofPixels *image;
     // image scaled down by DOWNSCALE_FACTOR
     ofPixels imageScaled;
 

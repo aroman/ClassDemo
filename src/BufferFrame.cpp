@@ -351,6 +351,9 @@ BufferFrame::BufferFrame() {
 
   faceDetector = new FaceDetector();
   faceDetector->startThread(true);
+  // Might help performance a bit, we don't want it stealing CPU time
+  // from the main/GL/draw thread!
+  (&faceDetector->getPocoThread())->setPriority(Poco::Thread::PRIO_LOWEST);
 }
 
 BufferFrame::~BufferFrame() {
@@ -369,19 +372,23 @@ BufferFrame::~BufferFrame() {
 void BufferFrame::update() {
   if (!kinect->isConnected) return;
 
+  TS_START("getRgbPixels");
   pRGB = kinect->getRgbPixels();
+  TS_STOP("getRgbPixels");
   pBigDepth = kinect->getBigDepthPixels();
   hasData = (pRGB.size() > 0);
 
   if (!hasData) return;
 
+  TS_START("loadData");
   tRender.loadData(pRGB);
+  TS_STOP("loadData");
 
-  initPeople(faceDetector);
-  updateOpenFace(openFace);
+  initPeople();
+  // updateOpenFace();
 }
 
-void BufferFrame::updateOpenFace(OpenFace *openFace) {
+void BufferFrame::updateOpenFace() {
   return;
   // if (people.size() == 0) return;
 
@@ -491,26 +498,25 @@ void BufferFrame::drawTopView() {
   font.drawString("front", 10, 1065);
 }
 
-void BufferFrame::initPeople(FaceDetector *faceDetector) {
-  ofLogNotice("BufferFrame") << "BufferFrame::initPeople";
-  findPeople(faceDetector);
+void BufferFrame::initPeople() {
+  // ofLogNotice("BufferFrame") << "BufferFrame::initPeople";
+  findPeople();
   // for (int i = 0; i < people.size(); i++) {
   //     people[i].init(pRGB, pBigDepth);
   // }
 }
 
-void BufferFrame::findPeople(FaceDetector *faceDetector) {
-  ofLogNotice("BufferFrame") << "BufferFrame::findPeople";
+void BufferFrame::findPeople() {
+  // ofLogNotice("BufferFrame") << "BufferFrame::findPeople";
   //
   // for (auto &person : people) {
   //   person.free();
   // }
   // people.clear();
 
+  TS(faceDetector->updateImage(&pRGB));
 
-  TS(faceDetector->updateImage(pRGB));
-
-  ofLogNotice("BufferFrame") << "people detected" << faceDetector->detectedFaces.bboxes.size();
+  // ofLogNotice("BufferFrame") << "people detected" << faceDetector->detectedFaces.bboxes.size();
 
   // increases the capacity
   // people.reserve(faceDetector->detectedFaces.bboxes.size());

@@ -8,7 +8,7 @@ from mtcnn_detector import MtcnnDetector
 SHOW_VIZ = False
 BENCHMARK = False
 
-detector = MtcnnDetector(model_folder='models/mxnet-mtcnn', ctx=mx.cpu(0), num_worker=4, accurate_landmark = False)
+detector = MtcnnDetector(model_folder='models/mxnet-mtcnn', ctx=mx.cpu(0), num_worker=1, accurate_landmark = False)
 
 def detect(img):
 
