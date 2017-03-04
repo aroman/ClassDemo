@@ -10,3 +10,6 @@
 [submodule "3rdParty/mxnet_mtcnn"]
 	path = 3rdParty/mxnet_mtcnn
 	url = https://github.com/pangyupo/mxnet_mtcnn_face_detection
+[submodule "3rdParty/addons/ofxTimeMeasurements"]
+	path = 3rdParty/addons/ofxTimeMeasurements
+	url = https://github.com/armadillu/ofxTimeMeasurements.git

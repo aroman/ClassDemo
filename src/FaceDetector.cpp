@@ -1,34 +1,48 @@
-//
-//  FaceDetector.cpp
-//  ClassDemo
-//
-//  Created by Avi Romanoff on 11/12/16.
-//
-//
-
-#include "FaceDetector.hpp"
+#include "FaceDetector.h"
+#include "ofxTimeMeasurements.h"
 
 FaceDetector::FaceDetector() {
   detector = new MtcnnDetector();
   isImageDirty = false;
 }
 
-void FaceDetector::updateImage(cv::Mat newImage) {
-    newImage.copyTo(image);
-    isImageDirty = true;
+FaceDetector::~FaceDetector() {
+  stopThread();
+  if (detector != NULL) delete detector;
+}
+
+void FaceDetector::updateImage(ofPixels newImage) {
+  image = newImage;
+  isImageDirty = true;
 }
 
 void FaceDetector::threadedFunction() {
-
-    while(isThreadRunning()) {
-        if (isImageDirty) {
-            mutex.lock();
-            detectedFaces = detector->detectFaces(image);
-            mutex.unlock();
-        }
+  while(isThreadRunning()) {
+    if (!isImageDirty) {
+      sleep(10);
+      continue;
     }
 
-//    // Keep only non overlapping detections
-//    NonOverlapingDetections(models, faces_detected);
+    // mutex.lock();
 
+    // resize the imageScaled
+    ofPixels imageScaled;
+    imageScaled.allocate(
+      image.getWidth() / DOWNSCALE_FACTOR,
+      image.getHeight() / DOWNSCALE_FACTOR,
+      image.getPixelFormat()
+    );
+    image.resizeTo(imageScaled);
+
+    cv::Mat imageScaledMat = ofxCv::toCv(imageScaled);
+
+    // XXX: When I rewrote the kinect integration, this conversion became necessary...
+    cv::cvtColor(imageScaledMat, imageScaledMat, CV_RGBA2RGB);
+
+    TS_START("mtcnn detect");
+    detectedFaces = detector->detectFaces(imageScaledMat);
+    TS_STOP("mtcnn detect");
+
+    // mutex.unlock();
+  }
 }

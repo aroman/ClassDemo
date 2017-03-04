@@ -6,7 +6,7 @@ import mxnet as mx
 from mtcnn_detector import MtcnnDetector
 
 SHOW_VIZ = False
-BENCHMARK = True
+BENCHMARK = False
 
 detector = MtcnnDetector(model_folder='models/mxnet-mtcnn', ctx=mx.cpu(0), num_worker=4, accurate_landmark = False)
 
@@ -21,6 +21,9 @@ def detect(img):
         results = detector.detect_face(img)
         elapsed = time.time() - start
         print "mtcnn_runner: detect took %dms" % (int(round(elapsed * 1000)))
+    else:
+        results = detector.detect_face(img)
+
 
     if results is not None:
         bboxes = [list(box) for box in results[0]]

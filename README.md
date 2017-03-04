@@ -21,6 +21,13 @@ cd mxnet
 sh setup-utils/install-mxnet-osx-python.sh
 ```
 
+##### Installing libfreenect2
+
+We use only the OpenCL depth processing packet pipeline, so need to make sure libfreenect2
+is compiled with support for that. Here are the CMake flags you want:
+
+`cmake .. -DENABLE_CXX11=TRUE -DENABLE_OPENCL=TRUE -DENABLE_OPENGL=FALSE`
+
 *TODO*: List them here with a command to install all of them on macOS/Ubuntu
 
 #### Building, running, debugging
@@ -30,7 +37,3 @@ sh setup-utils/install-mxnet-osx-python.sh
 **Debug:** `./run.sh --debug`
 
 Simple!
-
-#### Notes for Cyrus
-
-1. You need to patch mxnet_mtcnn to make it single-threaded. This is trivially easy: edit `3rcParty/mxnet_mtcnn/mtcnn_detector.py` and on line 241 change `self.Pool.map` to `map`. NOTE: this may only be a problem on macOS.

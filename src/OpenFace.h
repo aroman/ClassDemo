@@ -1,3 +1,5 @@
+#pragma once
+
 #include "ofThread.h"
 #include "ofxCv.h"
 #include "LandmarkCoreIncludes.h"
@@ -6,10 +8,13 @@
 #include "tbb/tbb.h"
 
 struct rect {
-    double x;
-    double y;
-    double width;
-    double height;
+  double x;
+  double y;
+  double width;
+  double height;
+
+  //scales it about it's center
+  void scaleAboutCenter(double scale);
 };
 
 struct faceData {
@@ -28,6 +33,7 @@ class OpenFace : public ofThread  {
 
 public:
   OpenFace();
+  ~OpenFace();
   void updateFaces(vector<faceData> newFaces);
   void updateImage(ofPixels rgb);
   void drawTo(cv::Mat mat);

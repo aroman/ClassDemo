@@ -1,11 +1,15 @@
 #include "OpenFace.h"
 
-static const int NUM_FACES_MAX = 5; // 8
+static const int NUM_FACES_MAX = 1; // 8
 static const int MAX_MODEL_FAILURES_IN_A_ROW = 3;
 static const double MIN_CERTAINTY_FOR_VISUALIZATION = 0.2;
 
 OpenFace::OpenFace() {
   isSetup = false;
+}
+
+OpenFace::~OpenFace() {
+  stopThread();
 }
 
 void OpenFace::threadedFunction() {

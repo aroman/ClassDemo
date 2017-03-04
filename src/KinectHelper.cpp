@@ -17,7 +17,7 @@ bool KinectHelper::connect() {
     return false;
   }
 
-  libfreenect2::PacketPipeline *pipeline = new libfreenect2::OpenGLPacketPipeline();
+  libfreenect2::PacketPipeline *pipeline = new libfreenect2::OpenCLPacketPipeline();
   device = freenect2.openDevice(freenect2.getDefaultDeviceSerialNumber(), pipeline);
   if (device == NULL) {
     std::cerr << "Failure opening Kinect device" << std::endl;
@@ -74,8 +74,7 @@ ofFloatPixels KinectHelper::getBigDepthPixels() {
 }
 
 void KinectHelper::threadedFunction() {
-
-    while(isThreadRunning()) {
+    while (isThreadRunning()) {
       if (!listener->waitForNewFrame(frames, KINECT_FRAME_TIMEOUT)) {
         std::cerr << "Timed out waiting for new Kinect frame" << std::endl;
         break;

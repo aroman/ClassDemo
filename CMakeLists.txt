@@ -21,6 +21,7 @@ option(COTIRE "Use cotire" ON)
 set(sources
   src/main.cpp
   src/ofApp.cpp
+  src/BufferFrame.cpp
   src/KinectHelper.cpp
   src/FaceDetector.cpp
   src/MtcnnDetector.cpp
@@ -57,6 +58,7 @@ include_directories(${PYTHON_INCLUDE_DIRS})
 ### addons
 ofxaddon(ofxGui)
 ofxaddon(3rdParty/addons/ofxCv)
+ofxaddon(3rdParty/addons/ofxTimeMeasurements)
 
 set(ofx_addon_includes 3rdParty/addons/ofxCv/libs/CLD/include/CLD 3rdParty/addons/ofxCv/libs/ofxCv/include/ofxCv)
 include_directories(${ofx_addon_includes})

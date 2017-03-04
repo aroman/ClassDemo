@@ -1,3 +1,5 @@
+#pragma once
+
 #include "ofThread.h"
 #include "ofxCv.h"
 #include <libfreenect2/libfreenect2.hpp>
