@@ -3,7 +3,13 @@
 *NOTE:* This project uses Git submodules. Make sure you clone this repository with `--recursive`, like so:
 
 ```
-$ git clone --recursive git@github.com:synergylabs/sensei.git
+git clone --recursive git@github.com:synergylabs/sensei.git
+```
+
+And when you're pulling and someone else has added a submodule, do this:
+
+```
+git submodule update --recursive --init
 ```
 
 #### Dependencies
