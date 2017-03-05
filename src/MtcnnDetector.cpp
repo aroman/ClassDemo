@@ -3,21 +3,21 @@
 #include "MtcnnDetector.h"
 
 MtcnnDetector::MtcnnDetector() {
-  Py_SetProgramName((char*)"mtcnn-bridge");
+  Py_SetProgramName(const_cast<char*>("mtcnn-bridge"));
   Py_Initialize();
   PyEval_InitThreads();
   import_array();
 
   PyObject *pModule, *pModuleName;
 
-  pModuleName = PyString_FromString((char*)"mtcnn_runner");
+  pModuleName = PyString_FromString(const_cast<char*>("mtcnn_runner"));
   pModule = PyImport_Import(pModuleName);
   Py_DECREF(pModuleName);
   if (pModule == NULL) {
     // PyErr_SetString(PyExc_TypeError, "could not import mtcnn_runner module");
     PyErr_Print();
   }
-  pDetectFunc = PyObject_GetAttrString(pModule,(char*)"detect");
+  pDetectFunc = PyObject_GetAttrString(pModule,const_cast<char*>("detect"));
   if (pDetectFunc == NULL || !PyCallable_Check(pDetectFunc)) {
       PyErr_SetString(PyExc_TypeError, "detect function is not callable");
       PyErr_Print();

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include "ofThread.h"
 #include "ofxCv.h"
 #include "LandmarkCoreIncludes.h"
@@ -20,7 +21,7 @@ class OpenFace : public ofThread  {
 public:
   OpenFace();
   ~OpenFace();
-  void updateFaces(vector<rect> newFaces);
+  void updateFaces(vector<ofRectangle> newFaces);
   void updateImage(ofPixels rgb);
   void drawTo(cv::Mat mat);
   bool isSetup;

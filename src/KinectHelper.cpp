@@ -92,8 +92,8 @@ void KinectHelper::threadedFunction() {
       mutex.lock();
 
       rgbPixelsBack.setFromPixels(rgb->data, rgb->width, rgb->height, OF_PIXELS_BGRA);
-      depthPixelsBack.setFromPixels((float *)depth->data, ir->width, ir->height, OF_PIXELS_GRAY);
-      bigDepthPixelsBack.setFromPixels((float *)bigDepth->data, bigDepth->width, bigDepth->height, OF_PIXELS_GRAY);
+      depthPixelsBack.setFromPixels(reinterpret_cast<float *>(depth->data), ir->width, ir->height, OF_PIXELS_GRAY);
+      bigDepthPixelsBack.setFromPixels(reinterpret_cast<float *>(bigDepth->data), bigDepth->width, bigDepth->height, OF_PIXELS_GRAY);
 
       float *pixels = bigDepthPixelsBack.getData();
       for (int i = 0; i < bigDepthPixelsBack.size(); i++) {

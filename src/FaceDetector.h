@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdio.h>
+#include <vector>
 #include "ofThread.h"
 #include "ofxCv.h"
 #include "MtcnnDetector.h"
@@ -13,8 +13,8 @@ public:
     void threadedFunction();
     void updateImage(ofPixels *newImage);
 
-    const double DOWNSCALE_FACTOR = 3.0;
-    ofEvent<vector<ofRectangle>> onDetectionResults;
+    const double scaleFactor = 3.0;
+    ofEvent<const vector<ofRectangle>> onDetectionResults;
 
 private:
     MtcnnDetector *detector;

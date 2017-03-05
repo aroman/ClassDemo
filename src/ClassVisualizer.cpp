@@ -54,6 +54,12 @@ void ClassVisualizer::update() {
   TS_STOP("load RGB texture");
 
   faceDetector->updateImage(&pRGB);
+
+  peopleAccessMutex.lock();
+  for (auto &person : people) {
+    person.update(pRGB, pBigDepth);
+  }
+  peopleAccessMutex.unlock();
 }
 
 void ClassVisualizer::draw() {
@@ -86,23 +92,16 @@ void ClassVisualizer::drawTopView() {
   ofDrawBitmapStringHighlight("front", 10, 1065);
 }
 
-void ClassVisualizer::onFaceDetectionResults(vector<ofRectangle> &bboxes) {
+void ClassVisualizer::onFaceDetectionResults(const vector<ofRectangle> &bboxes) {
   ofLogNotice("ClassVisualizer") << "onFaceDetectionResults " << bboxes.size();
 
-  for (auto &person : people) {
-    person.free();
-  }
+  peopleAccessMutex.lock();
   people.clear();
-
   people.reserve(bboxes.size());
-
   for (auto bbox : bboxes) {
     people.push_back(Person(bbox));
   }
-
-  for (auto &person : people) {
-    person.init(pRGB, pBigDepth);
-  }
+  peopleAccessMutex.unlock();
 }
 
 void ClassVisualizer::onOpenFaceResults() {

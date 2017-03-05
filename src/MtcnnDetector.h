@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include <python2.7/Python.h>
 #include "ofxCv.h"
 #include "ofThread.h"

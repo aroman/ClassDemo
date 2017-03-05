@@ -17,7 +17,7 @@ public:
   ~ClassVisualizer();
   void update();
   void draw();
-  void onFaceDetectionResults(vector<ofRectangle> &bboxes);
+  void onFaceDetectionResults(const vector<ofRectangle> &bboxes);
   void onOpenFaceResults();
   VisualizerMode mode = VisualizerMode::FRONTAL;
 
@@ -29,6 +29,7 @@ private:
   bool hasData = false;
   bool isDataStale = false;
 
+  ofMutex peopleAccessMutex;
   vector<Person> people;
 
   void drawFrontView();

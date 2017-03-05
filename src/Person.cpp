@@ -1,62 +1,37 @@
 #include "Person.h"
 
-// helper
-void drawBoundBox(rect r, ofColor color) {
-  double padding = (r.width * 0.05);
+static const double HANDBOX_X_RATIO = 2.0;
+static const double HANDBOX_Y_RATIO = 0.25;
 
+// helper
+void drawBoundBox(ofRectangle r, ofColor color) {
   ofPath p;
   p.setFillColor(color);
-
-  p.rectangle(r.x,
-              r.y,
-              r.width,
-              r.height);
-  p.rectangle(r.x + padding,
-              r.y + padding,
-              r.width - (2 * padding),
-              r.height - (2 * padding));
-
+  p.rectangle(r);
+  ofRectangle outer(r);
+  outer.scaleFromCenter(1.1);
+  p.rectangle(outer);
   p.draw();
 }
 
-void rect::scaleAboutCenter(double scale) {
-  double n_x = x;
-  double n_y = y;
-  double n_width = width;
-  double n_height = height;
-
-  width = n_width * scale;
-  height = n_height * scale;
-
-  x = n_x - ((width - n_width) / 2.0);
-  y = n_y - ((height - n_height) / 2.0);
-}
-
-//region
-void region::free() {
-  imRGB.clear();
-  imDepth.clear();
-  ofpDepth.clear();
-}
-
-void region::doDepthStats(rect b) {
+void region::doDepthStats(ofRectangle b) {
   doDepthAverage(b);
-  doDepthVariance(b);
+  // doDepthVariance(b);
   doDepthMinMax(b);
 }
 
-void region::doDepthAverage(rect b) {
-  if (fDepth == NULL) return;
+void region::doDepthAverage(ofRectangle b) {
+  if (depthMap == NULL) return;
   float tempAvgDepth = 0.0;
   int counter = 0;
 
   for (int x = b.x; x < (b.x + b.width); x++) {
     for (int y = b.y; y < (b.y + b.height); y++) {
-      uint index = (y * ofpDepth.getWidth()) + x;
-      if (index < numPixels) {
-        float val = fDepth[index];
-        if(val < 0.0) val = 0.0;
-        if(val > 1.0) val = 1.0;
+      uint index = (y * imDepth.getWidth()) + x;
+      if (index < imDepth.getWidth() * imDepth.getHeight()) {
+        float val = depthMap[index];
+        if (val < 0.0) val = 0.0;
+        if (val > 1.0) val = 1.0;
         tempAvgDepth += val;
         counter++;
       }
@@ -72,16 +47,16 @@ void region::doDepthAverage(rect b) {
   avgDepth = tempAvgDepth;
 }
 
-void region::doDepthVariance(rect b) {
-  if (fDepth == NULL) return;
+void region::doDepthVariance(ofRectangle b) {
+  if (depthMap == NULL) return;
   float tempAvgDepthDiff = 0.0;
   int counter = 0;
 
   for (int x = b.x; x < (b.x + b.width); x++) {
     for (int y = b.y; y < (b.y + b.height); y++) {
-      uint index = (y * ofpDepth.getWidth()) + x;
-      if (index < numPixels) {
-        float val = fDepth[index];
+      uint index = (y * imDepth.getWidth()) + x;
+      if (index < imDepth.getWidth() * imDepth.getHeight()) {
+        float val = depthMap[index];
         if (val < 0.0) val = 0.0;
         if (val > 1.0) val = 1.0;
         tempAvgDepthDiff += abs(val - avgDepth);
@@ -97,17 +72,17 @@ void region::doDepthVariance(rect b) {
   avgDepthDiff = tempAvgDepthDiff;
 }
 
-void region::doDepthMinMax(rect b) {
-  if (fDepth == NULL) return;
+void region::doDepthMinMax(ofRectangle b) {
+  if (depthMap == NULL) return;
 
   float tempMinDepth = 1.0; // actually closest to screen
   float tempMaxDepth = 0.0; // actually farthest from screen
 
   for (int x = b.x; x < (b.x + b.width); x++) {
     for (int y = b.y; y < (b.y + b.height); y++) {
-      uint index = (y * ofpDepth.getWidth()) + x;
-      if (index < numPixels) {
-        float val = fDepth[index];
+      uint index = (y * imDepth.getWidth()) + x;
+      if (index < imDepth.getWidth() * imDepth.getHeight()) {
+        float val = depthMap[index];
         if (val < 0.0) val = 0.0;
         if (val > 1.0) val = 1.0;
 
@@ -126,62 +101,28 @@ void region::doDepthMinMax(rect b) {
   maxDepth = tempMaxDepth;
 }
 
-void region::updateDepth(ofFloatPixels pDepth) {
-  // copy ofFloatPixels pBigDepth to ofPixels faceDepth
-  ofTexture t;
-  ofPixels d;
-  t.loadData(pDepth);
-  t.readToPixels(d);
-
-  ofLogNotice("ofApp") <<  r.x << " " << r.y << " " << r.width << " " << r.height;
-
-  // crop faceDepth
-  d.crop(r.x, r.y, r.width, r.height);
-
-  // run cv
-  imDepth.setFromPixels(d);
-  ofxCv::blur(imDepth,20);
+void region::updateDepth(const ofFloatPixels &pDepth) {
+  if (r.x < 0 || r.y < 0) return;
+  pDepth.cropTo(imDepth.getPixels(), r.x, r.y, r.width, r.height);
+  if (r.y > 0) {
+    ofxCv::blur(imDepth, 20);
+  } else {
+    ofLogNotice("region::updateDepth r.y out of screen: ") << r.y;
+  }
   imDepth.update();
-
-  // update statistics on depth
-  ofImage t2;
-  t2.setFromPixels(d);
-  t2.update();
-
-  ofFloatPixels p2 = t2.getPixels();
-  fDepth = p2.getData();
-  ofpDepth = imDepth.getPixels();
-  numPixels = (ofpDepth.getWidth() * ofpDepth.getHeight());
+  depthMap = imDepth.getPixels().getData();
 }
 
-void region::updateRGB(ofPixels pRGB) {
-  //copy ofFloatPixels pBigDepth to ofPixels faceDepth
-  ofTexture t;
-  ofPixels d;
-  t.loadData(pRGB);
-  t.readToPixels(d);
-
-  //crop faceDepth
-  // d.crop(r.x, r.y, r.width, r.height);
-
-  //run cv
-  imRGB.setFromPixels(d);
-  //ofxCv::blur(imRGB,5);
+void region::updateRGB(const ofPixels &pRGB) {
+  if (r.x < 0 || r.y < 0) return;
+  pRGB.cropTo(imRGB.getPixels(), r.x, r.y, r.width, r.height);
   imRGB.update();
 }
 
 // Construct a person from a bounding box
 Person::Person(ofRectangle bbox) {
-  ofLogNotice("Person", "Person constructor called");
-  f.r.x = bbox.x;
-  f.r.y = bbox.y;
-  f.r.width = bbox.width;
-  f.r.height = bbox.height;
-}
-
-void Person::free() {
-  f.free();
-  h.free();
+  f.r = bbox;
+  f.r.scaleFromCenter(1.5);
 }
 
 void Person::drawTopView() const {
@@ -189,14 +130,15 @@ void Person::drawTopView() const {
   //draw faceDepth image
   //f.imDepth.draw(f.r.x,f.r.y);
 
-  //draw bounding box to screen
-  rect r;
-  r.x = f.r.x;
-  r.width = f.r.width;
-  r.height = f.r.height;
+  ofRectangle r(f.r);
   r.y = (f.avgDepth * imageHeight) - (r.height / 2);
 
-  f.imRGB.draw(r.x,r.y);
+  // f.imRGB.drawSubsection(
+  //   r.x, r.y, f.r.width, f.r.height,
+  //   f.r.x, f.r.y
+  // );
+
+  f.imRGB.draw(r.x, r.y);
 
   if (raisedHand) {
     drawBoundBox(r, ofColor::red);
@@ -211,9 +153,11 @@ void Person::drawTopView() const {
 }
 
 void Person::drawFrontView() const {
-  //draw images
-  f.imDepth.draw(f.r.x,f.r.y);
+  //f.imDepth.draw(f.r.x, f.r.y);
+
   //h.imDepth.draw(h.r.x,h.r.y);
+
+  // f.imRGB.draw(f.r.x, f.r.y);
 
   //set color from average distance
   //ofColor avgColor;
@@ -228,11 +172,10 @@ void Person::drawFrontView() const {
   //draw bounding box to screen
   drawBoundBox(h.r, ofColor::black);
 
+  drawBoundBox(f.r, ofColor::blue);
+
   if (raisedHand) {
-    drawBoundBox(f.r, ofColor::red);
-    //ofImage icon;
-    //icon.load("logo1.png");
-    //icon.draw(f.r.x,f.r.y);
+    drawBoundBox(f.r, ofColor::red);\
   }
 
   //ofSetColor(ofColor::red);
@@ -243,19 +186,30 @@ void Person::drawFrontView() const {
   //ofSetColor(ofColor::black);
 }
 
-void Person::update(ofPixels pRGB, ofFloatPixels pBigDepth) {
-  rect r1;
+void Person::update(const ofPixels &pRGB, const ofFloatPixels &pBigDepth) {
+  // Create handbox
+  auto h_w = HANDBOX_X_RATIO * f.r.width;
+  auto h_h = (HANDBOX_Y_RATIO * f.r.height);
+  h.r = ofRectangle(
+    f.r.x + (f.r.width/2.0) - (h_h/2.0),
+    f.r.y - h_h*2,
+    h_w,
+    h_h
+  );
+
+  ofLogNotice("Person::update h.r =") << h.r;
+
+  f.updateRGB(pRGB);
+  f.updateDepth(pBigDepth);
+
+  ofRectangle r1;
   r1.width = 50;
   r1.height = 50;
   r1.x = (f.r.width - r1.width) / 2.0;
   r1.y = (f.r.height - r1.height) / 2.0;
 
-  f.updateRGB(pRGB);
-  f.updateDepth(pBigDepth);
-
   f.doDepthAverage(r1);
-  f.doDepthVariance(r1);
-  return;
+  // f.doDepthVariance(r1);
 
   r1.x = 0;
   r1.y = 0;
@@ -264,7 +218,7 @@ void Person::update(ofPixels pRGB, ofFloatPixels pBigDepth) {
 
   f.doDepthMinMax(r1);
 
-  rect r2;
+  ofRectangle r2;
   r2.x = 0;
   r2.y = 0;
   r2.width = h.r.width;
@@ -294,35 +248,13 @@ void Person::update(ofPixels pRGB, ofFloatPixels pBigDepth) {
 
   cout << "face: " << endl;
   cout << "   avgDepth:     " << f.avgDepth << endl;
-  cout << "   avgDepthDiff: " << f.avgDepthDiff << endl;
+  // cout << "   avgDepthDiff: " << f.avgDepthDiff << endl;
   cout << "   minDepth:     " << f.minDepth << endl;
   cout << "   maxDepth:     " << f.maxDepth << endl;
 
   cout << "hand: " << endl;
   cout << "   avgDepth:     " << h.avgDepth << endl;
-  cout << "   avgDepthDiff: " << h.avgDepthDiff << endl;
+  // cout << "   avgDepthDiff: " << h.avgDepthDiff << endl;
   cout << "   minDepth:     " << h.minDepth  << endl;
   cout << "   maxDepth:     " << h.maxDepth  << endl;
-}
-
-void Person::init(ofPixels pRGB, ofFloatPixels pBigDepth) {
-  f.r.scaleAboutCenter(1.5);
-
-  // set hand position
-  rect r = f.r;
-
-  double yRatio = 0.25;
-  double xRatio = 2.0;
-  double new_h = (yRatio * r.height);
-  double new_w = (xRatio * r.width);
-  double new_y = r.y - (4 * new_h);
-  double new_x = r.x + (r.width/2.0) - (new_w/2.0);
-
-  r.x = new_x;
-  r.y = new_y;
-  r.width = new_w;
-  r.height = new_h;
-
-  h.r = r;
-  update(pRGB, pBigDepth);
 }

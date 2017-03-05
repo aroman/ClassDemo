@@ -20,7 +20,7 @@ void FaceDetector::updateImage(ofPixels *newImage) {
 }
 
 void FaceDetector::threadedFunction() {
-  while(isThreadRunning()) {
+  while (isThreadRunning()) {
     if (!isImageDirty) {
       yield();
       continue;
@@ -34,8 +34,8 @@ void FaceDetector::threadedFunction() {
     yield();
 
     imageScaled.allocate(
-      imageCopy.getWidth() / DOWNSCALE_FACTOR,
-      imageCopy.getHeight() / DOWNSCALE_FACTOR,
+      imageCopy.getWidth() / scaleFactor,
+      imageCopy.getHeight() / scaleFactor,
       imageCopy.getPixelFormat()
     );
     yield();
@@ -44,7 +44,7 @@ void FaceDetector::threadedFunction() {
     cv::Mat imageScaledMat = ofxCv::toCv(imageScaled);
 
     // XXX: When I rewrote the kinect integration, this conversion became necessary...
-    cv::cvtColor(imageScaledMat, imageScaledMat, CV_RGBA2RGB);
+    cv::cvtColor(imageScaledMat, imageScaledMat, CV_BGRA2BGR);
 
     yield();
     mtcnn_detect_results results;
@@ -56,8 +56,8 @@ void FaceDetector::threadedFunction() {
     vector<ofRectangle> bboxes;
     for (auto &r_bbox : results.bboxes) {
       bboxes.push_back(ofRectangle(
-        ofPoint(r_bbox.x1 * DOWNSCALE_FACTOR, r_bbox.y1 * DOWNSCALE_FACTOR),
-        ofPoint(r_bbox.x2 * DOWNSCALE_FACTOR, r_bbox.y2 * DOWNSCALE_FACTOR)
+        ofPoint(r_bbox.x1 * scaleFactor, r_bbox.y1 * scaleFactor),
+        ofPoint(r_bbox.x2 * scaleFactor, r_bbox.y2 * scaleFactor)
       ));
     }
     ofNotifyEvent(onDetectionResults, bboxes);

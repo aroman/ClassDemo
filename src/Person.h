@@ -3,56 +3,37 @@
 #include "ofxCv.h"
 #include "ofMain.h"
 
-struct rect {
-  double x;
-  double y;
-  double width;
-  double height;
-
-  void scaleAboutCenter(double scale);
-};
-
-
 struct region {
-
-  rect r;
+  ofRectangle r;
 
   ofImage imRGB;
-
-  ofImage imDepth;
-  ofFloatPixels ofpDepth;
-  float* fDepth;
-
-  int numPixels;
+  ofFloatImage imDepth;
+  float *depthMap;
 
   float minDepth;
   float maxDepth;
   float avgDepth;
   float avgDepthDiff;
 
-  void doDepthStats(rect r);
-  void doDepthAverage(rect r);
-  void doDepthVariance(rect r);
-  void doDepthMinMax(rect r);
-  void updateDepth(ofFloatPixels pDepth);
-  void updateRGB(ofPixels pRGB);
+  void doDepthStats(ofRectangle r);
+  void doDepthAverage(ofRectangle r);
+  void doDepthVariance(ofRectangle r);
+  void doDepthMinMax(ofRectangle r);
+  void updateDepth(const ofFloatPixels &pDepth);
+  void updateRGB(const ofPixels &pRGB);
   void free();
-
 };
 
 struct Person {
+  explicit Person(ofRectangle bbox);
 
-  Person(ofRectangle bbox);
-
-  region f; // face
-  region h; // hand-raise area
+  region f;  // face
+  region h;  // hand-raise area
 
   bool raisedHand = false;
 
   void drawFrontView() const;
   void drawTopView() const;
-  void init(ofPixels pRGB, ofFloatPixels pBigDepth);
-  void update(ofPixels pRGB, ofFloatPixels pBigDepth);
+  void update(const ofPixels &pRGB, const ofFloatPixels &pBigDepth);
   void free();
-
 };

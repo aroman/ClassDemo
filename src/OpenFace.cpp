@@ -13,7 +13,7 @@ OpenFace::~OpenFace() {
 }
 
 void OpenFace::threadedFunction() {
-    while(isThreadRunning()) {
+    while (isThreadRunning()) {
       if (!isSetup) continue;
       if (isMatDirty) {
         updateTrackers();
@@ -27,7 +27,6 @@ void OpenFace::doSetup() {
     // maybe try turning it off, doesn't make much difference
     default_parameters.use_face_template = true;
     // Model should not try to re-initialising itself
-    // TODO @avi more accurate comment
     default_parameters.reinit_video_every = -1;
     default_parameters.model_location = "/opt/sensei/model/main_clnf_general.txt";
     default_parameters.track_gaze = true;
@@ -58,10 +57,10 @@ void OpenFace::updateImage(ofPixels rgb) {
   isMatDirty = true;
 }
 
-void OpenFace::updateFaces(vector<rect> newFaces) {
+void OpenFace::updateFaces(vector<ofRectangle> newFaces) {
   faces.clear();
   for (int i = 0; i < newFaces.size(); i++) {
-    rect r = newFaces[i];
+    auto r = newFaces[i];
     faces.push_back(cv::Rect(r.x, r.y, r.width * 1.05, r.height * 1.05));
   }
 }
