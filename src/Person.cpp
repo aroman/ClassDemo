@@ -51,16 +51,16 @@ void region::doDepthAverage(rect b) {
   int counter = 0;
 
   for (int x = b.x; x < (b.x + b.width); x++) {
-      for (int y = b.y; y < (b.y + b.height); y++) {
-          uint index = (y * ofpDepth.getWidth()) + x;
-          if(index < numPixels) {
-              float val = fDepth[index];
-              if(val < 0.0) val = 0.0;
-              if(val > 1.0) val = 1.0;
-              tempAvgDepth += val;
-              counter++;
-          }
+    for (int y = b.y; y < (b.y + b.height); y++) {
+      uint index = (y * ofpDepth.getWidth()) + x;
+      if (index < numPixels) {
+        float val = fDepth[index];
+        if(val < 0.0) val = 0.0;
+        if(val > 1.0) val = 1.0;
+        tempAvgDepth += val;
+        counter++;
       }
+    }
   }
 
   cout << "size: " << counter << endl;
@@ -170,14 +170,18 @@ void region::updateRGB(ofPixels pRGB) {
   imRGB.update();
 }
 
-//Person
-Person::Person() {
-  // ofLogNotice("Person", "Person constructor called");
+// Construct a person from a bounding box
+Person::Person(ofRectangle bbox) {
+  ofLogNotice("Person", "Person constructor called");
+  f.r.x = bbox.x;
+  f.r.y = bbox.y;
+  f.r.width = bbox.width;
+  f.r.height = bbox.height;
 }
 
 void Person::free() {
-    f.free();
-    h.free();
+  f.free();
+  h.free();
 }
 
 void Person::drawTopView() const {
@@ -222,13 +226,13 @@ void Person::drawFrontView() const {
   //iFace.update();
 
   //draw bounding box to screen
-  drawBoundBox(h.r,ofColor::black);
+  drawBoundBox(h.r, ofColor::black);
 
-  if(raisedHand) {
-      drawBoundBox(f.r,ofColor::red);
-      //ofImage icon;
-      //icon.load("logo1.png");
-      //icon.draw(f.r.x,f.r.y);
+  if (raisedHand) {
+    drawBoundBox(f.r, ofColor::red);
+    //ofImage icon;
+    //icon.load("logo1.png");
+    //icon.draw(f.r.x,f.r.y);
   }
 
   //ofSetColor(ofColor::red);

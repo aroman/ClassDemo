@@ -13,7 +13,7 @@ void ofApp::update() {
 }
 
 void ofApp::draw() {
-  // ofClear(0);
+  ofClear(0);
   visualizer->draw();
 }
 
@@ -28,14 +28,14 @@ ofApp::~ofApp() {
 void ofApp::keyPressed(int key) {
   if (visualizer == NULL) return;
   if (key == 32) { // spacebar
-    visualizer->toggleView = true;
+    visualizer->mode = VisualizerMode::BIRDSEYE;
   }
 }
 
 void ofApp::keyReleased(int key) {
   if (visualizer == NULL) return;
   if (key == 32) { // spacebar
-    visualizer->toggleView = false;
+    visualizer->mode = VisualizerMode::FRONTAL;
   }
 }
 

@@ -3,7 +3,6 @@
 #include "ofxCv.h"
 #include "ofMain.h"
 
-
 struct rect {
   double x;
   double y;
@@ -43,7 +42,7 @@ struct region {
 
 struct Person {
 
-  Person();
+  Person(ofRectangle bbox);
 
   region f; // face
   region h; // hand-raise area

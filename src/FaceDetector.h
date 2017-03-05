@@ -14,7 +14,7 @@ public:
     void updateImage(ofPixels *newImage);
 
     const double DOWNSCALE_FACTOR = 3.0;
-    ofEvent<mtcnn_detect_results> onDetectionResults;
+    ofEvent<vector<ofRectangle>> onDetectionResults;
 
 private:
     MtcnnDetector *detector;

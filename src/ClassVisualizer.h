@@ -8,16 +8,18 @@
 #include "FaceDetector.h"
 #include "Person.h"
 
+enum class VisualizerMode {FRONTAL, BIRDSEYE};
+
 class ClassVisualizer {
 
 public:
   ClassVisualizer();
   ~ClassVisualizer();
-  bool toggleView = false;
   void update();
   void draw();
-  void onFaceDetectionResults(mtcnn_detect_results &results);
+  void onFaceDetectionResults(vector<ofRectangle> &bboxes);
   void onOpenFaceResults();
+  VisualizerMode mode = VisualizerMode::FRONTAL;
 
 private:
   ofPixels pRGB;
@@ -31,8 +33,6 @@ private:
 
   void drawFrontView();
   void drawTopView();
-
-  void updateOpenFace();
 
   KinectHelper *kinect = NULL;
   FaceDetector *faceDetector = NULL;

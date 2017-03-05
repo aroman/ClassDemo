@@ -26,7 +26,7 @@ void FaceDetector::threadedFunction() {
       continue;
     }
 
-    // resize the imageScaled
+    // resize the imageCopy to the size of imageScaled
     ofPixels imageScaled;
     mutex.lock();
     ofPixels imageCopy = *image;
@@ -53,13 +53,14 @@ void FaceDetector::threadedFunction() {
     TS_STOP("detector->detectFaces");
     yield();
 
-    for (auto &bbox : results.bboxes) {
-      bbox.x1 *= DOWNSCALE_FACTOR;
-      bbox.x2 *= DOWNSCALE_FACTOR;
-      bbox.y1 *= DOWNSCALE_FACTOR;
-      bbox.y2 *= DOWNSCALE_FACTOR;
+    vector<ofRectangle> bboxes;
+    for (auto &r_bbox : results.bboxes) {
+      bboxes.push_back(ofRectangle(
+        ofPoint(r_bbox.x1 * DOWNSCALE_FACTOR, r_bbox.y1 * DOWNSCALE_FACTOR),
+        ofPoint(r_bbox.x2 * DOWNSCALE_FACTOR, r_bbox.y2 * DOWNSCALE_FACTOR)
+      ));
     }
-    ofNotifyEvent(onDetectionResults, results);
+    ofNotifyEvent(onDetectionResults, bboxes);
 
   }
 }
