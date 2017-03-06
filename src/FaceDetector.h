@@ -13,7 +13,7 @@ public:
     void threadedFunction();
     void updateImage(ofPixels *newImage);
 
-    const double scaleFactor = 3.0;
+    const double scaleFactor = 4.0;
     ofEvent<const vector<ofRectangle>> onDetectionResults;
 
 private:

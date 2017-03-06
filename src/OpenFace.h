@@ -14,29 +14,35 @@ struct FaceTracker {
   LandmarkDetector::CLNF model;
   LandmarkDetector::FaceModelParameters parameters;
   bool isActive;
+
+  double getX() const;
+  double getY() const;
 };
 
 class OpenFace : public ofThread  {
 
 public:
-  OpenFace();
+  OpenFace(float fx, float fy, float cx, float cy);
   ~OpenFace();
   void updateFaces(vector<ofRectangle> newFaces);
   void updateImage(ofPixels rgb);
   void drawTo(cv::Mat mat);
   bool isSetup;
   void doSetup();
+  void updateTrackers();
 
 private:
   void threadedFunction();
-  void updateTrackers();
 
   bool isFaceAtIndexAlreadyBeingTracked(int face_ind);
+  void alreadyTrackingFaceWithin(ofRectangle bbox);
 
   float fx, fy, cx, cy;
 
   bool isMatDirty;
   cv::Mat matGrayscale;
+  cv::Mat matGrayscaleBack;
+  cv::Mat matGrayscaleFront;
 
   vector<cv::Rect> faces;
   vector<FaceTracker> trackers;

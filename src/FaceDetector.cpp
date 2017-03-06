@@ -12,7 +12,6 @@ FaceDetector::~FaceDetector() {
 }
 
 void FaceDetector::updateImage(ofPixels *newImage) {
-  // ofLogNotice("FaceDetector", "updateImage");
   mutex.lock();
   image = newImage;
   mutex.unlock();
@@ -43,14 +42,14 @@ void FaceDetector::threadedFunction() {
 
     cv::Mat imageScaledMat = ofxCv::toCv(imageScaled);
 
-    // XXX: When I rewrote the kinect integration, this conversion became necessary...
+    // Drop the (unused) alpha channel
     cv::cvtColor(imageScaledMat, imageScaledMat, CV_BGRA2BGR);
 
     yield();
     mtcnn_detect_results results;
-    TS_START("detector->detectFaces");
+    TS_START("[MTCNN] detect faces");
     results = detector->detectFaces(imageScaledMat);
-    TS_STOP("detector->detectFaces");
+    TS_STOP("[MTCNN] detect faces");
     yield();
 
     vector<ofRectangle> bboxes;

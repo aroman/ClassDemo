@@ -3,10 +3,10 @@
 #include "ofxCv.h"
 #include "ofMain.h"
 
-struct region {
+struct Space {
   ofRectangle r;
 
-  ofImage imRGB;
+  ofImage imColor;
   ofFloatImage imDepth;
   float *depthMap;
 
@@ -15,25 +15,22 @@ struct region {
   float avgDepth;
   float avgDepthDiff;
 
-  void doDepthStats(ofRectangle r);
   void doDepthAverage(ofRectangle r);
-  void doDepthVariance(ofRectangle r);
   void doDepthMinMax(ofRectangle r);
-  void updateDepth(const ofFloatPixels &pDepth);
-  void updateRGB(const ofPixels &pRGB);
-  void free();
+
+  void updateDepth(const ofFloatPixels &depthPixels);
+  void updateColor(const ofPixels &colorPixels);
 };
 
 struct Person {
   explicit Person(ofRectangle bbox);
 
-  region f;  // face
-  region h;  // hand-raise area
+  Space f;  // face
+  Space h;  // hand-raise area
 
   bool raisedHand = false;
 
-  void drawFrontView() const;
-  void drawTopView() const;
-  void update(const ofPixels &pRGB, const ofFloatPixels &pBigDepth);
-  void free();
+  void drawFrontalView() const;
+  void drawBirdseyeView() const;
+  void update(const ofPixels &colorPixels, const ofFloatPixels &depthPixels);
 };

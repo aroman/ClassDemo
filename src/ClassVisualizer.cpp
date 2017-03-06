@@ -2,9 +2,7 @@
 #include "ofxTimeMeasurements.h"
 
 ClassVisualizer::ClassVisualizer() {
-  openFace = new OpenFace();
-  // openFace->doSetup();
-  // openFace->startThread(true);
+  hasData = false;
 
   kinect = new KinectHelper();
 
@@ -13,7 +11,9 @@ ClassVisualizer::ClassVisualizer() {
       std::exit(1);
   }
 
-  hasData = false;
+  openFace = new OpenFace(kinect->fx, kinect->fy, kinect->cx, kinect->cy);
+  openFace->doSetup();
+  openFace->startThread(true);
 
   faceDetector = new FaceDetector();
   faceDetector->startThread(true);
@@ -43,48 +43,69 @@ ClassVisualizer::~ClassVisualizer() {
 void ClassVisualizer::update() {
   if (!kinect->isConnected) return;
 
-  pRGB = kinect->getRgbPixels();
-  pBigDepth = kinect->getBigDepthPixels();
-  hasData = (pRGB.size() > 0);
+  colorPixels = kinect->getColorPixels();
+  depthPixels = kinect->getBigDepthPixels();
+  hasData = (colorPixels.size() > 0);
 
   if (!hasData) return;
 
-  TS_START("load RGB texture");
-  tRender.loadData(pRGB);
-  TS_STOP("load RGB texture");
+  TS_START("update color texture");
+  // colorTexture.loadData(colorPixels);
+  TS_STOP("update color texture");
 
-  faceDetector->updateImage(&pRGB);
+  faceDetector->updateImage(&colorPixels);
 
   peopleAccessMutex.lock();
   for (auto &person : people) {
-    person.update(pRGB, pBigDepth);
+    person.update(colorPixels, depthPixels);
   }
   peopleAccessMutex.unlock();
+
+  if (openFace->isSetup && !people.empty()) {
+    TS_START("[OpenFace] update color pixel data");
+    openFace->updateImage(colorPixels);
+    TS_STOP("[OpenFace] update color pixel data");
+
+    TS_START("[OpenFace] update trackers");
+    openFace->updateTrackers();
+    TS_STOP("[OpenFace] update trackers");
+  }
 }
 
 void ClassVisualizer::draw() {
   if (!hasData) return;
 
   if (mode == VisualizerMode::BIRDSEYE) {
-    drawTopView();
+    drawBirdseyeView();
   } else {
-    drawFrontView();
+    drawFrontalView();
   }
 }
 
-void ClassVisualizer::drawFrontView() {
-  tRender.draw(0, 0);
+void ClassVisualizer::drawFrontalView() {
+  // Draw OpenFace
+  TS_START("[OpenFace] draw");
+  ofPixels colorForMat;
+  colorForMat.setFromPixels(colorPixels.getData(), colorPixels.getWidth(), colorPixels.getHeight(), OF_IMAGE_COLOR_ALPHA);
+  colorForMat.swapRgb();
+  cv::Mat mat = ofxCv::toCv(colorForMat);
+  openFace->drawTo(mat);
+  ofxCv::drawMat(mat, 0, 0);
+  TS_STOP("[OpenFace] draw");
 
+  // Draw people
   for (auto const &person : people) {
-    person.drawFrontView();
+    person.drawFrontalView();
   }
+
+  // colorTexture.draw(0, 0);
 
   ofDrawBitmapStringHighlight("Front Facing View", 960, 15);
 }
 
-void ClassVisualizer::drawTopView() {
+void ClassVisualizer::drawBirdseyeView() {
   for (auto const &person : people) {
-    person.drawTopView();
+    person.drawBirdseyeView();
   }
 
   ofDrawBitmapStringHighlight("Bird's Eye View", 960, 15);
@@ -102,18 +123,5 @@ void ClassVisualizer::onFaceDetectionResults(const vector<ofRectangle> &bboxes) 
     people.push_back(Person(bbox));
   }
   peopleAccessMutex.unlock();
-}
-
-void ClassVisualizer::onOpenFaceResults() {
-  return;
-  // if (people.size() == 0) return;
-
-  // if (openFace->isSetup) {
-  //   openFace->updateFaces(faces);
-  //   openFace->updateImage(pRGB);
-  //   cv::Mat mat;
-  //   cv::cvtColor(ofxCv::toCv(pRGB), mat, CV_BGRA2RGB);
-  //   // openFace->drawTo(mat);
-  //   ofxCv::toOf(mat, pRGB);
-  // }
+  openFace->updateFaces(bboxes);
 }

@@ -1,11 +1,23 @@
 #include "OpenFace.h"
 
-static const int NUM_FACES_MAX = 1; // 8
-static const int MAX_MODEL_FAILURES_IN_A_ROW = 3;
-static const double MIN_CERTAINTY_FOR_VISUALIZATION = 0.2;
+static const int NUM_FACES_MAX = 1; // 10
+static const int MAX_MODEL_FAILURES_IN_A_ROW = 1;
+static const double MIN_CERTAINTY_FOR_VISUALIZATION = 0.35;
 
-OpenFace::OpenFace() {
+double FaceTracker::getX() const {
+  return model.params_global[4];
+}
+
+double FaceTracker::getY() const {
+  return model.params_global[5];
+}
+
+OpenFace::OpenFace(float fx, float fy, float cx, float cy) {
   isSetup = false;
+  this->fx = fx;
+  this->fy = fy;
+  this->cx = cx;
+  this->cy = cy;
 }
 
 OpenFace::~OpenFace() {
@@ -13,12 +25,15 @@ OpenFace::~OpenFace() {
 }
 
 void OpenFace::threadedFunction() {
-    while (isThreadRunning()) {
-      if (!isSetup) continue;
-      if (isMatDirty) {
-        updateTrackers();
-      }
-    }
+  // while (isThreadRunning()) {
+  //   if (!isSetup) continue;
+  //   if (isMatDirty) {
+  //     mutex.lock();
+  //     updateTrackers();
+  //     mutex.unlock();
+  //     yield();
+  //   }
+  // }
 }
 
 void OpenFace::doSetup() {
@@ -51,18 +66,26 @@ void OpenFace::doSetup() {
 }
 
 void OpenFace::updateImage(ofPixels rgb) {
-  cv::Mat newGrayscale;
-  cv::cvtColor(ofxCv::toCv(rgb), newGrayscale, CV_BGR2GRAY);
-  newGrayscale.copyTo(matGrayscale);
+  cv::cvtColor(ofxCv::toCv(rgb), matGrayscaleBack, CV_BGRA2GRAY);
+  matGrayscaleFront = matGrayscaleBack;
   isMatDirty = true;
 }
 
 void OpenFace::updateFaces(vector<ofRectangle> newFaces) {
+  mutex.lock();
   faces.clear();
   for (int i = 0; i < newFaces.size(); i++) {
     auto r = newFaces[i];
-    faces.push_back(cv::Rect(r.x, r.y, r.width * 1.05, r.height * 1.05));
+    ofLogNotice("OpenFace") << "Check tracking";
+    alreadyTrackingFaceWithin(r);
+    faces.push_back(cv::Rect(
+      (r.width * -0.0075) + r.x,
+      (r.height * 0.2459) + r.y,
+      r.width * 1.0323,
+      r.height * 0.7751
+    ));
   }
+  mutex.unlock();
 }
 
 bool OpenFace::isFaceAtIndexAlreadyBeingTracked(int face_ind) {
@@ -77,23 +100,48 @@ bool OpenFace::isFaceAtIndexAlreadyBeingTracked(int face_ind) {
 void OpenFace::drawTo(cv::Mat mat) {
   for (auto const &tracker : trackers) {
     if (!tracker.isActive) continue;
-    // double detectionCertainty = -tracker.model.detection_certainty;
-    // if (detectionCertainty < MIN_CERTAINTY_FOR_VISUALIZATION) {
-    //   ofLogNotice("OpenFace") << "Skipping because tracking below min certainty: " << detectionCertainty;
-    //   continue;
-    // }
+    double detectionCertainty = -tracker.model.detection_certainty;
+    ofLogNotice("OpenFace") << "certainty: " << detectionCertainty;
+    if (detectionCertainty < MIN_CERTAINTY_FOR_VISUALIZATION) {
+      ofLogNotice("OpenFace") << "Skipping because tracking below min certainty: " << detectionCertainty;
+      continue;
+    }
+
+    cv::Vec6d pose_estimate = LandmarkDetector::GetCorrectedPoseWorld(tracker.model, fx, fy, cx, cy);
     LandmarkDetector::Draw(mat, tracker.model);
+    LandmarkDetector::DrawBox(mat, pose_estimate, cv::Scalar(255, 0, 0), 10, fx, fy, cx, cy);
+  }
+}
+
+void OpenFace::alreadyTrackingFaceWithin(ofRectangle bbox) {
+  std::cout << bbox << '\n';
+  for (auto const &tracker : trackers) {
+    if (!tracker.isActive) continue;
+    printf("Tracker at %f, %f\n", tracker.getX(), tracker.getY());
   }
 }
 
 void OpenFace::updateTrackers() {
-  ofLogNotice("OpenFace") << "OpenFace::updateTrackers";
+  ofLogNotice("OpenFace") << "updateTrackers";
+
+  if (matGrayscaleFront.empty()) {
+    ofLogNotice("OpenFace") << "matGrayscaleFront is empty!";
+    return;
+  }
+
+  mutex.lock();
+  std::vector<bool> skipFace;
+  skipFace.reserve(faces.size());
+  for (auto const & face : faces) {
+    skipFace.push_back(false);
+  }
+  mutex.unlock();
 
   for (auto &tracker : trackers) {
     // Try to update active models, or reset them if they've stopped tracking.
     if (tracker.isActive == true) {
       bool didContinueTrackingSuccessfully = LandmarkDetector::DetectLandmarksInVideo(
-        matGrayscale,
+        matGrayscaleFront,
         tracker.model,
         tracker.parameters
       );
@@ -110,14 +158,20 @@ void OpenFace::updateTrackers() {
       }
     }
 
+    mutex.lock();
     for (int face_ind = 0; face_ind < faces.size(); face_ind++) {
+      // Another tracker tried and failed on this face, so let's not
+      // try again with this tracker.
+      if (skipFace[face_ind]) {
+        continue;
+      }
       if (isFaceAtIndexAlreadyBeingTracked(face_ind)) {
         continue;
       }
 
       // Note: We ARE passing a bounding box in
       bool didBeginTrackingSuccessfully = LandmarkDetector::DetectLandmarksInVideo(
-        matGrayscale,
+        matGrayscaleFront,
         faces[face_ind],
         tracker.model,
         tracker.parameters
@@ -126,10 +180,11 @@ void OpenFace::updateTrackers() {
       ofLogNotice("OpenFace") << "didBeginTrackingSuccessfully = " << didBeginTrackingSuccessfully;
       if (!didBeginTrackingSuccessfully) {
         // We don't want other trackers to bother attempting with this one
-        return;
+        skipFace[face_ind] = true;
       }
       tracker.isActive = true;
       tracker.faceIndex = face_ind;
     }
+    mutex.unlock();
   }
 }

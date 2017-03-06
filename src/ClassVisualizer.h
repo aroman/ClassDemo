@@ -22,18 +22,17 @@ public:
   VisualizerMode mode = VisualizerMode::FRONTAL;
 
 private:
-  ofPixels pRGB;
-  ofFloatPixels pBigDepth;
-  ofTexture tRender;
+  ofPixels colorPixels;
+  ofFloatPixels depthPixels;
+  ofTexture colorTexture;
 
   bool hasData = false;
-  bool isDataStale = false;
 
   ofMutex peopleAccessMutex;
   vector<Person> people;
 
-  void drawFrontView();
-  void drawTopView();
+  void drawFrontalView();
+  void drawBirdseyeView();
 
   KinectHelper *kinect = NULL;
   FaceDetector *faceDetector = NULL;

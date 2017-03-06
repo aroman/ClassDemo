@@ -14,7 +14,6 @@ MtcnnDetector::MtcnnDetector() {
   pModule = PyImport_Import(pModuleName);
   Py_DECREF(pModuleName);
   if (pModule == NULL) {
-    // PyErr_SetString(PyExc_TypeError, "could not import mtcnn_runner module");
     PyErr_Print();
   }
   pDetectFunc = PyObject_GetAttrString(pModule,const_cast<char*>("detect"));
