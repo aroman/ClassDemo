@@ -8,7 +8,17 @@
 #include "FaceDetector.h"
 #include "Person.h"
 
-enum class VisualizerMode {FRONTAL, BIRDSEYE};
+
+//We're always going to do the computation
+//but we'll control what we show!
+
+//We want to minimize the amount of work it takes when
+//drawing, not because it affects performance 
+//(because it's single threaded)
+//but because conceptually we shouldn't have to
+
+//view settings
+enum class ViewAngle {FRONTAL, BIRDSEYE};
 
 class ClassVisualizer {
 
@@ -19,12 +29,54 @@ public:
   void draw();
   void onFaceDetectionResults(const vector<ofRectangle> &bboxes);
   void onOpenFaceResults();
-  VisualizerMode mode = VisualizerMode::FRONTAL;
+
+  ViewAngle mode = ViewAngle::FRONTAL;
+  bool showHands = false; //press H or h
+  bool showCube = false; //press C or c
+  bool showLandmarks = false; //press L or l
+  bool showDepth = false; //press X or x
+  bool showPersonInfo = false; //press I or i
+  bool showInfoPanel = true;
+  bool showLoadScreen = true;
 
 private:
   ofPixels colorPixels;
   ofFloatPixels depthPixels; // depth pixels in meters50
   ofTexture colorTexture;
+
+
+
+
+  //visuals
+    //screen
+      int screenWidth = 1920;
+      int screenHeight = 1080;
+
+    //imagery
+      ofImage singleHand;
+      ofImage fullLogo;
+
+    //for drawing text
+      ofTrueTypeFont demoFont;
+      ofTrueTypeFont helpFont;
+      int lineSpace;
+      string helpText;
+      vector<string> aboutText;
+
+    //colors
+      ofColor lightBlue;
+
+
+  void drawTextboxCentered(string s, int x, int y, ofColor boxColor, ofColor textColor);
+  void drawTextboxTopLeft(string s, int x, int y, ofColor boxColor, ofColor textColor);
+  void drawTextboxTopRight(string s, int x, int y, ofColor boxColor, ofColor textColor);
+  void drawTextboxBottomLeft(string s, int x, int y, ofColor boxColor, ofColor textColor);
+  void drawTextboxBottomRight(string s, int x, int y, ofColor boxColor, ofColor textColor);
+
+
+
+
+
 
   bool hasData = false;
 
@@ -33,6 +85,8 @@ private:
 
   void drawFrontalView();
   void drawBirdseyeView();
+  void drawLoadScreen();
+  void drawInfoPanel();
 
   KinectHelper *kinect = NULL;
   FaceDetector *faceDetector = NULL;
