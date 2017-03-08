@@ -38,7 +38,7 @@ public:
   bool showDepth = false; //press X or x
   bool showPersonInfo = false; //press I or i
   bool showInfoPanel = true;
-  bool showLoadScreen = true;
+  bool showLoadScreen = false;
 
 private:
   static const size_t openFaceModelPoolSize = 2;

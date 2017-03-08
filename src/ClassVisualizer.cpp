@@ -128,7 +128,6 @@ void ClassVisualizer::update() {
 void ClassVisualizer::draw() {
   if (!hasData){
     drawLoadScreen();
-    drawInfoPanel();
     return;
   }
 
@@ -153,13 +152,13 @@ void ClassVisualizer::drawFrontalView() {
 
   // Draw people
   for (auto const &person : people) {
-    person.drawFrontalView();
+    //person.drawFrontalView();
   }
 }
 
 void ClassVisualizer::drawBirdseyeView() {
   for (auto const &person : people) {
-    person.drawBirdseyeView();
+    //person.drawBirdseyeView();
   }
 
   drawStringTopLeft(demoFont,"back",540,15,ofColor(0,0,0,0),ofColor::white);
