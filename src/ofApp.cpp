@@ -35,6 +35,8 @@ void ofApp::keyReleased(int key) {
   //don't use case 27: //escape
   //  escape will close the app!
   switch(key){
+    case 86: //V - same as v
+    case 118: //v - toggles view
     case 32: //spacebar - toggles between two views
       //switch from one mode to the other
       if(visualizer->mode == ViewAngle::FRONTAL){
@@ -44,41 +46,45 @@ void ofApp::keyReleased(int key) {
       break;
     case 72: //H - same as h
     case 104: //h - enables/disables hand view
-      cout << "---------------toggling hands" << endl;
+      //cout << "---------------toggling hands" << endl;
       visualizer->showHands = !visualizer->showHands;
       break;
     case 67: //C - same as c
     case 99: //c - enables/disable cube view
-      cout << "---------------toggling cube" << endl;
+      //cout << "---------------toggling cube" << endl;
       visualizer->showPose = !visualizer->showPose;
       break;
     case 76: //L - same as l
     case 108: //l - enables/disable landmarks
-      cout << "---------------toggling landmarks" << endl;
+      //cout << "---------------toggling landmarks" << endl;
       visualizer->showLandmarks = !visualizer->showLandmarks;
       break;
     case 68: //D - same as d
-    case 100: //d - resets to default settings
-      cout << "---------------reset everything to default" << endl;
+    case 100: //d - enables debug view settings
+      //cout << "---------------sets to debug view" << endl;
+      visualizer->showDebug = !visualizer->showDebug;
+      break;
+
+    case 73: //I - same as i
+    case 105: //i - sets person info
+      //cout << "---------------set to personInfo" << endl;
+      visualizer->showPersonInfo = !visualizer->showPersonInfo;
+      break;
+
+    case 88: //X - same as x
+    case 120: //x - enables x-ray view
+      //cout << "---------------toggling depth view" << endl;
+      visualizer->showDepth = !visualizer->showDepth;
+      break;
+    case 48: //0 - show load screen
+      //cout << "---------------show load screen" << endl;
+      visualizer->showLoadScreen = !visualizer->showLoadScreen;
       visualizer->showHands = false;
       visualizer->showPose = false;
       visualizer->showLandmarks = false;
       visualizer->showDepth = false;
       visualizer->showPersonInfo = false;
-      break;
-    case 66: //B - same as b
-    case 98: //b - sets to birdseye view
-      cout << "---------------set to birdseye" << endl;
-      visualizer->mode = ViewAngle::BIRDSEYE;
-      break;
-    case 88: //X - same as x
-    case 120: //x - enables x-ray view
-      cout << "---------------toggling depth view" << endl;
-      visualizer->showDepth = !visualizer->showDepth;
-      break;
-    case 48: //0 - show load screen
-      cout << "---------------show load screen" << endl;
-      visualizer->showLoadScreen = !visualizer->showLoadScreen;
+      visualizer->showDebug = false;
       break;
   }
 }

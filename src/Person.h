@@ -4,6 +4,14 @@
 #include "OpenFaceModel.h"
 
 
+void drawStringCentered(ofTrueTypeFont font, string s, int x, int y, ofColor boxColor, ofColor textColor);
+void drawStringTopLeft(ofTrueTypeFont font, string s, int x, int y, ofColor boxColor, ofColor textColor);
+void drawStringTopRight(ofTrueTypeFont font, string s, int x, int y, ofColor boxColor, ofColor textColor);
+void drawStringBottomLeft(ofTrueTypeFont font, string s, int x, int y, ofColor boxColor, ofColor textColor);
+void drawStringBottomRight(ofTrueTypeFont font, string s, int x, int y, ofColor boxColor, ofColor textColor);
+
+
+
 struct DepthStat {
   float min;
   float max;
@@ -42,6 +50,24 @@ struct Person {
   //void drawFrontalView() const;
   //void drawBirdseyeView() const;
 
+  void drawFrontDepth() const;
+  void drawTopColor() const;
+
+  void drawFrontDepthPoints(ofColor c) const;
+
+
+  void drawFrontHandbox(ofColor c) const;
+  void drawFrontPose(ofColor c) const;
+  void drawFrontBBox(ofColor c) const;
+  void drawFrontLandmarks(ofColor c) const; 
+  void drawTopHandbox(ofColor c) const;
+  void drawTopLandmarks(ofColor c) const;
+
+  void drawFrontPersonInfo(ofTrueTypeFont font) const;
+  void drawTopPersonInfo(ofTrueTypeFont font) const;
+  void drawPersonInfo(ofTrueTypeFont font, int x, int y) const;
+
+
 
   void recalculateBoundingBox();
   void updateMtcnnBoundingBox(ofRectangle bboxFromMtcnn);
@@ -50,13 +76,14 @@ struct Person {
   Space f; // face
   Space h; // hand-raise area
 
-
+  vector<ofPoint> depthLandmarks;
+  float depth;
+  int y_depth;
   string name;
-
-  bool isRaisingHand = false;
+  
   bool isConfirmed = false;
 
   //don't do depth work if we have bad depth
   bool hasGoodDepth = false;
-  float depth;
+  bool isRaisingHand = false;
 };

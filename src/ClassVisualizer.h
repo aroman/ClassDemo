@@ -9,6 +9,7 @@
 #include "Person.h"
 
 
+
 //We're always going to do the computation
 //but we'll control what we show!
 
@@ -39,6 +40,7 @@ public:
   bool showPersonInfo = false; //press I or i
   bool showInfoPanel = true;
   bool showLoadScreen = false;
+  bool showDebug = false;
 
 private:
   static const size_t openFaceModelPoolSize = 2;
@@ -60,6 +62,7 @@ private:
 
     //for drawing text
       ofTrueTypeFont demoFont;
+      ofTrueTypeFont peopleFont;
       ofTrueTypeFont helpFont;
       int lineSpace;
       string helpText;
@@ -69,11 +72,6 @@ private:
       ofColor lightBlue;
 
 
-  void drawStringCentered(ofTrueTypeFont font, string s, int x, int y, ofColor boxColor, ofColor textColor);
-  void drawStringTopLeft(ofTrueTypeFont font, string s, int x, int y, ofColor boxColor, ofColor textColor);
-  void drawStringTopRight(ofTrueTypeFont font, string s, int x, int y, ofColor boxColor, ofColor textColor);
-  void drawStringBottomLeft(ofTrueTypeFont font, string s, int x, int y, ofColor boxColor, ofColor textColor);
-  void drawStringBottomRight(ofTrueTypeFont font, string s, int x, int y, ofColor boxColor, ofColor textColor);
 
 
 

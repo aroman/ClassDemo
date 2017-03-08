@@ -11,22 +11,20 @@ ClassVisualizer::ClassVisualizer() {
   //load font
     demoFont.load("/opt/sensei/Hack-Regular.ttf", 20, true);
     helpFont.load("/opt/sensei/Hack-Regular.ttf", 16, true);
+    peopleFont.load("/opt/sensei/Hack-Regular.ttf", 12, true);
     lineSpace = ((int)(demoFont.getLineHeight()*1.25));
 
   //load texts
     helpText = "spacebar   - toggles between top and front\n"
+    "I or i     - enables/disables person info boxes\n"
     "H or h     - enables/disables hand view\n"
     "C or c     - enables/disables cube view\n"
     "L or l     - enables/disable landmarks\n"
-    "D or d     - resets to default settings\n"
-    "                x DON'T show hands\n"
-    "                x DON'T show cube\n"
-    "                x DON'T show landmarks\n"
-    "                o show rgb instead of depth\n"
-    "                x DON'T show person info boxes\n"
-    "B or b     - manually sets to 'birdseye' view\n"
+    "V or v     - toggles between top and front view\n"
     "X or x     - toggles between depth and rgb view\n"
-    "0          - show load/help screen\n";
+    "D or d     - toggles debug view\n"
+    "0          - show load/help screen, resets view\n"
+    "PG DWN     - toggles timer screen\n";
 
     aboutText.push_back("v0.1");
     aboutText.push_back("Carnegie Mellon University");
@@ -148,21 +146,66 @@ void ClassVisualizer::draw() {
 
 void ClassVisualizer::drawFrontalView() {
   colorTexture.draw(0, 0);
-
-
   // Draw people
   for (auto const &person : people) {
-    //person.drawFrontalView();
+    if(showDebug){
+      person.drawFrontDepth();
+      person.drawFrontHandbox(ofColor::red);
+      person.drawFrontPose(ofColor::yellow);
+      person.drawFrontBBox(ofColor::orange);
+      person.drawFrontLandmarks(ofColor::red);
+      person.drawFrontDepthPoints(ofColor::green);
+
+      person.drawFrontPersonInfo(peopleFont);
+
+    } else{
+      if(showDepth){
+        person.drawFrontDepth();
+      }
+      if(showHands){
+        person.drawFrontHandbox(ofColor::red);
+      }
+      if(showPose){
+        person.drawFrontPose(ofColor::yellow);
+      }
+      else{
+        person.drawFrontBBox(ofColor::orange);
+      }
+      if(showLandmarks){
+        person.drawFrontLandmarks(ofColor::red);
+      }
+      if(showPersonInfo){
+        person.drawFrontPersonInfo(peopleFont);
+      }
+    }
   }
 }
 
 void ClassVisualizer::drawBirdseyeView() {
   for (auto const &person : people) {
-    //person.drawBirdseyeView();
+    if(showDebug){
+      person.drawTopColor();
+      person.drawTopHandbox(ofColor::black);
+      person.drawTopLandmarks(ofColor::red);
+      person.drawTopPersonInfo(peopleFont);
+    } else{
+      if(showDepth){
+        person.drawTopColor();
+      }
+      if(showHands){
+        person.drawTopHandbox(ofColor::black);
+      }
+      if(showLandmarks){
+        person.drawTopLandmarks(ofColor::red);
+      }
+      if(showPersonInfo){
+        person.drawTopPersonInfo(peopleFont);
+      }
+    }
   }
 
-  drawStringTopLeft(demoFont,"back",540,15,ofColor(0,0,0,0),ofColor::white);
-  drawStringTopLeft(demoFont,"back",540,1065,ofColor(0,0,0,0),ofColor::white);
+  //drawStringTopLeft(demoFont,"back",540,15,ofColor(0,0,0,0),ofColor::white);
+  //drawStringTopLeft(demoFont,"back",540,1065,ofColor(0,0,0,0),ofColor::white);
 }
 
 
@@ -272,146 +315,3 @@ void ClassVisualizer::onFaceDetectionResults(const vector<ofRectangle> &bboxes) 
   peopleAccessMutex.unlock();
 
 }
-
-void ClassVisualizer::drawStringCentered(ofTrueTypeFont font, string s, int xc, int yc, ofColor boxColor, ofColor textColor){
-  //do some voodoo
-  int sw = (font.stringWidth(s));
-  int sh = (font.stringHeight(s));
-
-  int sw1 = sw * 1.05;
-  int sh1 = sh * 1.8;
-
-  int x1 = xc - (sw1/2);
-  int y1 = yc - (sh1/2);
-
-  ofSetColor(boxColor);
-  ofFill();
-  ofDrawRectangle(x1,y1,sw1,sh1);
-
-  int sw2 = sw;
-  int sh2 = sh;
-
-  int x2 = xc - (sw2/2);
-  int y2 = yc - ((sh2*1.3)/2);
-
-  ofSetColor(textColor);
-  font.drawString(s, x2, y2 + (sh2));}
-
-void ClassVisualizer::drawStringTopLeft(ofTrueTypeFont font, string s, int xl, int yl, ofColor boxColor, ofColor textColor){
-  //do some voodoo
-  int sw = (font.stringWidth(s));
-  int sh = (font.stringHeight(s));
-
-  int sw1 = sw * 1.05;
-  int sh1 = sh * 1.8;
-
-  int x1 = xl;
-  int y1 = yl;
-
-  ofSetColor(boxColor);
-  ofFill();
-  ofDrawRectangle(x1,y1,sw1,sh1);
-
-  int sw2 = sw;
-  int sh2 = sh;
-
-  int xc = x1 + (sw1/2);
-  int yc = y1 + (sh1/2);
-
-  int x2 = xc - (sw2/2);
-  int y2 = yc - ((sh2*1.3)/2);
-
-  ofSetColor(textColor);
-  font.drawString(s, x2, y2 + (sh2));}
-
-void ClassVisualizer::drawStringTopRight(ofTrueTypeFont font, string s, int xr, int yr, ofColor boxColor, ofColor textColor){
-
-  //do some voodoo
-  int sw = (font.stringWidth(s));
-  int sh = (font.stringHeight(s));
-
-  int sw1 = sw * 1.05;
-  int sh1 = sh * 1.8;
-
-  xr -= sw1;
-
-  int x1 = xr;
-  int y1 = yr;
-
-  ofSetColor(boxColor);
-  ofFill();
-  ofDrawRectangle(x1,y1,sw1,sh1);
-
-  int sw2 = sw;
-  int sh2 = sh;
-
-  int xc = x1 + (sw1/2);
-  int yc = y1 + (sh1/2);
-
-  int x2 = xc - (sw2/2);
-  int y2 = yc - ((sh2*1.3)/2);
-
-  ofSetColor(textColor);
-  font.drawString(s, x2, y2 + (sh2));}
-
-void ClassVisualizer::drawStringBottomLeft(ofTrueTypeFont font, string s, int xl, int yl, ofColor boxColor, ofColor textColor){
-
-  //do some voodoo
-  int sw = (font.stringWidth(s));
-  int sh = (font.stringHeight(s));
-
-  int sw1 = sw * 1.05;
-  int sh1 = sh * 1.8;
-
-  yl -= sh1;
-
-  int x1 = xl;
-  int y1 = yl;
-
-  ofSetColor(boxColor);
-  ofFill();
-  ofDrawRectangle(x1,y1,sw1,sh1);
-
-  int sw2 = sw;
-  int sh2 = sh;
-
-  int xc = x1 + (sw1/2);
-  int yc = y1 + (sh1/2);
-
-  int x2 = xc - (sw2/2);
-  int y2 = yc - ((sh2*1.3)/2);
-
-  ofSetColor(textColor);
-  font.drawString(s, x2, y2 + (sh2));}
-
-void ClassVisualizer::drawStringBottomRight(ofTrueTypeFont font, string s, int xr, int yr, ofColor boxColor, ofColor textColor){
-
-  //do some voodoo
-  int sw = (font.stringWidth(s));
-  int sh = (font.stringHeight(s));
-
-  int sw1 = sw * 1.05;
-  int sh1 = sh * 1.8;
-
-  xr -= sw1;
-  yr -= sh1;
-
-  int x1 = xr;
-  int y1 = yr;
-
-  ofSetColor(boxColor);
-  ofFill();
-  ofDrawRectangle(x1,y1,sw1,sh1);
-
-  int sw2 = sw;
-  int sh2 = sh;
-
-  int xc = x1 + (sw1/2);
-  int yc = y1 + (sh1/2);
-
-  int x2 = xc - (sw2/2);
-  int y2 = yc - ((sh2*1.3)/2);
-
-  ofSetColor(textColor);
-  font.drawString(s, x2, y2 + (sh2));}
-

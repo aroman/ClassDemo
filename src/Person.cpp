@@ -2,10 +2,154 @@
 #include "Person.h"
 
 static const double FACE_SCALE_RATIO = 1.5;
-static const double HANDBOX_X_RATIO = 2.0;
-static const double HANDBOX_Y_RATIO = 0.25;
+static const double HANDBOX_X_RATIO = 1.75;
+static const double HANDBOX_Y_RATIO = 0.375;
 
-// helper
+
+
+// inter-class helpers
+void drawStringCentered(ofTrueTypeFont font, string s, int xc, int yc, ofColor boxColor, ofColor textColor){
+  //do some voodoo
+  int sw = (font.stringWidth(s));
+  int sh = (font.stringHeight(s));
+
+  int sw1 = sw * 1.05;
+  int sh1 = sh * 1.8;
+
+  int x1 = xc - (sw1/2);
+  int y1 = yc - (sh1/2);
+
+  ofSetColor(boxColor);
+  ofFill();
+  ofDrawRectangle(x1,y1,sw1,sh1);
+
+  int sw2 = sw;
+  int sh2 = sh;
+
+  int x2 = xc - (sw2/2);
+  int y2 = yc - ((sh2*1.3)/2);
+
+  ofSetColor(textColor);
+  font.drawString(s, x2, y2 + (sh2));}
+
+void drawStringTopLeft(ofTrueTypeFont font, string s, int xl, int yl, ofColor boxColor, ofColor textColor){
+  //do some voodoo
+  int sw = (font.stringWidth(s));
+  int sh = (font.stringHeight(s));
+
+  int sw1 = sw * 1.05;
+  int sh1 = sh * 1.8;
+
+  int x1 = xl;
+  int y1 = yl;
+
+  ofSetColor(boxColor);
+  ofFill();
+  ofDrawRectangle(x1,y1,sw1,sh1);
+
+  int sw2 = sw;
+  int sh2 = sh;
+
+  int xc = x1 + (sw1/2);
+  int yc = y1 + (sh1/2);
+
+  int x2 = xc - (sw2/2);
+  int y2 = yc - ((sh2*1.3)/2);
+
+  ofSetColor(textColor);
+  font.drawString(s, x2, y2 + (sh2));}
+
+void drawStringTopRight(ofTrueTypeFont font, string s, int xr, int yr, ofColor boxColor, ofColor textColor){
+
+  //do some voodoo
+  int sw = (font.stringWidth(s));
+  int sh = (font.stringHeight(s));
+
+  int sw1 = sw * 1.05;
+  int sh1 = sh * 1.8;
+
+  xr -= sw1;
+
+  int x1 = xr;
+  int y1 = yr;
+
+  ofSetColor(boxColor);
+  ofFill();
+  ofDrawRectangle(x1,y1,sw1,sh1);
+
+  int sw2 = sw;
+  int sh2 = sh;
+
+  int xc = x1 + (sw1/2);
+  int yc = y1 + (sh1/2);
+
+  int x2 = xc - (sw2/2);
+  int y2 = yc - ((sh2*1.3)/2);
+
+  ofSetColor(textColor);
+  font.drawString(s, x2, y2 + (sh2));}
+
+void drawStringBottomLeft(ofTrueTypeFont font, string s, int xl, int yl, ofColor boxColor, ofColor textColor){
+
+  //do some voodoo
+  int sw = (font.stringWidth(s));
+  int sh = (font.stringHeight(s));
+
+  int sw1 = sw * 1.05;
+  int sh1 = sh * 1.8;
+
+  yl -= sh1;
+
+  int x1 = xl;
+  int y1 = yl;
+
+  ofSetColor(boxColor);
+  ofFill();
+  ofDrawRectangle(x1,y1,sw1,sh1);
+
+  int sw2 = sw;
+  int sh2 = sh;
+
+  int xc = x1 + (sw1/2);
+  int yc = y1 + (sh1/2);
+
+  int x2 = xc - (sw2/2);
+  int y2 = yc - ((sh2*1.3)/2);
+
+  ofSetColor(textColor);
+  font.drawString(s, x2, y2 + (sh2));}
+
+void drawStringBottomRight(ofTrueTypeFont font, string s, int xr, int yr, ofColor boxColor, ofColor textColor){
+
+  //do some voodoo
+  int sw = (font.stringWidth(s));
+  int sh = (font.stringHeight(s));
+
+  int sw1 = sw * 1.05;
+  int sh1 = sh * 1.8;
+
+  xr -= sw1;
+  yr -= sh1;
+
+  int x1 = xr;
+  int y1 = yr;
+
+  ofSetColor(boxColor);
+  ofFill();
+  ofDrawRectangle(x1,y1,sw1,sh1);
+
+  int sw2 = sw;
+  int sh2 = sh;
+
+  int xc = x1 + (sw1/2);
+  int yc = y1 + (sh1/2);
+
+  int x2 = xc - (sw2/2);
+  int y2 = yc - ((sh2*1.3)/2);
+
+  ofSetColor(textColor);
+  font.drawString(s, x2, y2 + (sh2));}
+
 void drawBoundBox(ofRectangle r, ofColor color) {
   ofPath p;
   p.setFillColor(color);
@@ -16,13 +160,19 @@ void drawBoundBox(ofRectangle r, ofColor color) {
   p.draw();
 }
 
-float* scaleDepthPixelsForDrawing(ofFloatPixels *depthPixels) {
+void scaleDepthPixelsForDrawing(ofFloatPixels *depthPixels) {
   // Scale from meters to 0-1 (float)
   float *pixelData = depthPixels->getData();
   for (int i = 0; i < depthPixels->size(); i++) {
       pixelData[i] = ofMap(pixelData[i], 500, 4500, 1, 0, true);
   }
 }
+
+
+
+
+
+
 
 void Space::updateDepthPixels(const ofFloatPixels &newDepthPixels) {
   if (r.x < 0 || r.y < 0) return;
@@ -72,12 +222,6 @@ DepthStat Space::doDepthMath(ofRectangle b){
     if(((int)(b.x + b.width)) <= 0) return d; //out of bounds, no overlap
     if(((int)(b.y + b.height)) <= 0) return d; //out of bounds, no overlap
 
-  cout << "-- is valid invalid (if this prints)" << endl;
-
-  ofSetColor(ofColor::yellow);
-  ofFill();
-  ofDrawRectangle(r.x + b.x,r.y + b.y,b.width,b.height);
-
   //now we know that:
   //  there's data in the depth maps
   //  that there's a nonzero area to compute over
@@ -115,8 +259,6 @@ DepthStat Space::doDepthMath(ofRectangle b){
       assert(index > 0);
       assert(index < (((uint)depthPixels.getWidth())*((uint)depthPixels.getHeight())));
       float val = (float)max(min((double)depthMap[index],0.999),0.0);
-      cout << "-" << index << ", "  << val << endl;
-
       //do computation
         //do max
           if(val > maxVal){
@@ -150,9 +292,9 @@ DepthStat Space::doDepthMath(ofRectangle b){
   assert(bestIndex < numBuckets);
 
 
-  d.min = maxVal; //0.0 is the farthest
-  d.max= minVal; //1.0 is the closest
-  d.mode = buckets[bestIndex]; 
+  d.min = minVal; //0.0 is the farthest
+  d.max = maxVal; //1.0 is the closest
+  d.mode = (1.0 * bestIndex) / (1.0 * numBuckets); 
 
   assert(pixelCounter > 0);
   if(pixelCounter != 0){
@@ -163,9 +305,10 @@ DepthStat Space::doDepthMath(ofRectangle b){
   }
 
   d.valid = true;
-  cout << "avg: " << d.avg << ", sum: " << sum << endl;
-  cout << "min: " << d.min << endl;
-  cout << "max:"  << d.max << endl;
+  //cout << "avg: " << d.avg << ", sum: " << sum << endl;
+  //cout << "min: " << d.min << endl;
+  //cout << "max:"  << d.max << endl;
+  //cout << "mode:"  << d.mode << endl;
   return d;
 }
 
@@ -212,10 +355,10 @@ void Person::recalculateBoundingBox() {
   f.r.scaleFromCenter(FACE_SCALE_RATIO);
 
   auto h_w = HANDBOX_X_RATIO * f.r.width;
-  auto h_h = (HANDBOX_Y_RATIO * f.r.height);
+  auto h_h = HANDBOX_Y_RATIO * f.r.height;
   h.r = ofRectangle(
     f.r.x + (f.r.width/2.0) - (h_w/2.0),
-    f.r.y - h_h*2,
+    f.r.y - (f.r.height) - h_h,
     h_w,
     h_h
   );
@@ -228,53 +371,100 @@ ofRectangle Person::currentBoundingBox() const {
     return mtcnnBoundingBox;
 }
 
-/*
-void Person::drawFrontalView() const {
 
-  ofColor bboxColor;
-  if (isRaisingHand) {
-    bboxColor = ofColor::blue;
-  } else {
-    bboxColor = ofColor::white;
+
+void Person::drawFrontDepthPoints(ofColor c) const{
+  ofSetColor(c);
+  for(uint i = 0; i < depthLandmarks.size(); i++){
+    ofPoint p = depthLandmarks[i];
+    ofDrawCircle(p.x,p.y,10);
   }
+  ofSetColor(ofColor::white);
+}
 
-  drawBoundBox(h.r, ofColor::black);
-
-  if (openFaceModel == nullptr) {
-    drawBoundBox(f.r, bboxColor);
-  } else {
-    openFaceModel->getLandmarksPolyline().draw();
+void Person::drawFrontDepth() const{
+  //DEBUG
+  //h.depthPixels.draw(h.r.x, h.r.y);
+}
+void Person::drawFrontHandbox(ofColor c) const{
+  if(isRaisingHand){
+    drawBoundBox(h.r, c);
+  }
+  else{
+    drawBoundBox(h.r, ofColor::black);
+  }
+}
+void Person::drawFrontPose(ofColor c) const{
+  if (openFaceModel != nullptr) {
     for (auto pointPair : openFaceModel->get3DBoundingBox()) {
       ofPath path;
-      path.setStrokeColor(bboxColor);
+      path.setStrokeColor(c);
       path.setStrokeWidth(5);
       path.lineTo(std::get<0>(pointPair));
       path.lineTo(std::get<1>(pointPair));
       path.draw();
     }
-  }
-
-
-  ofDrawBitmapStringHighlight("avg: " + ofToString(f.avgDepth), f.r.x, f.r.y + f.r.height - 40);
-}
-*/
-
-/*
-void Person::drawBirdseyeView() const {
-  ofRectangle r(f.r);
-  r.y = (f.avgDepth * f.colorPixels.getHeight()) - (r.height / 2);
-
-  // f.colorPixels.draw(r.x, r.y);
-
-  if (isRaisingHand) {
-    drawBoundBox(r, ofColor::red);
   } else {
-    drawBoundBox(r, ofColor::blue);
+      drawBoundBox(f.r, c);
   }
-
-  ofDrawBitmapStringHighlight("avg: " + ofToString(f.avgDepth), r.x, r.y - 15);
 }
-*/
+void Person::drawFrontBBox(ofColor c) const {
+  drawBoundBox(f.r, c);
+}
+void Person::drawFrontLandmarks(ofColor c) const{
+  if (openFaceModel != nullptr) {
+    ofPolyline line = openFaceModel->getLandmarksPolyline();
+    line.draw();
+  }
+}
+
+
+
+
+
+void Person::drawTopColor() const{
+  if(hasGoodDepth){
+    ofRectangle r(f.r);
+    r.y = y_depth;    
+  }
+  
+  //DEBUG
+  //f.colorPixels.draw(r.x, r.y);    
+}
+void Person::drawTopHandbox(ofColor c) const{
+  
+}
+void Person::drawTopLandmarks(ofColor c) const{
+  
+}
+
+void Person::drawFrontPersonInfo(ofTrueTypeFont font) const{
+  int x = f.r.x;
+  int y = f.r.y + (1.5*f.r.height);
+  drawPersonInfo(font, x, y);
+}
+
+void Person::drawTopPersonInfo(ofTrueTypeFont font) const{
+  int x = f.r.x;
+  int y = y_depth;
+  drawPersonInfo(font, x, y);
+
+}
+
+
+
+
+
+void Person::drawPersonInfo(ofTrueTypeFont font, int x,int y) const{
+  ofColor box = ofColor(0,0,0,50);
+  ofColor text = ofColor(255,255,255,100);
+  string s;
+  s = "ID: " + name;
+  drawStringTopLeft(font, s, x, y, box, text);
+  s = "Depth: " + ofToString(depth);
+  y += font.getLineHeight();
+  drawStringTopLeft(font, s, x, y, box, text);
+}
 
 void Person::update(const ofPixels &newColorPixels, const ofFloatPixels &newDepthPixels) {
   //if we find the depth data to be sufficient,
@@ -295,40 +485,72 @@ void Person::update(const ofPixels &newColorPixels, const ofFloatPixels &newDept
       h.updateDepthPixels(newDepthPixels);
 
   //get depth for head:
-    bool usedOpenFace = false;
-    //try to use openface
-      if (openFaceModel == nullptr) {
-        //get nose 2D coordinates
-        uint id = 28;
-        if(id < openFaceModel->getLandmarks().size()){
-          ofPoint nose = openFaceModel->getLandmarks()[id];
-          DepthStat d = f.doDepthMathAt(nose.x-f.r.x,nose.y-f.r.y,2);
+    //zero out previous test locations
+    depthLandmarks.clear();
 
-          if(d.valid){
-            depth = d.max;
-            hasGoodDepth = true;
-            usedOpenFace = true;      
+    //retrieve depths from those locations
+    vector<float> depths;
+  
+    //try to use openface's locations
+      if (openFaceModel != nullptr) {
+
+        vector<uint> indices;
+        indices.push_back(28); //nose
+        indices.push_back(39); //left eye
+        indices.push_back(42); //right eye
+
+        for(uint i = 0; i < indices.size(); i++){
+          uint id = indices[i];
+          if(id < openFaceModel->getLandmarks().size()){
+            //add the locations of these landmarks
+            depthLandmarks.push_back(openFaceModel->getLandmarks()[id]);
           }
         }
       }
-    //if we failed to, be clever instead
-      if(!usedOpenFace){
-        DepthStat d = f.doDepthMathAt((f.r.width/2),(f.r.height/2),2);
-          if(d.valid){
-            depth = d.max;
-            hasGoodDepth = true;    
-          }
+
+    //add our backup locations
+      ofPoint center = ofPoint((f.r.width/2),(f.r.height/2));
+      depthLandmarks.push_back(center);
+
+    assert(depthLandmarks.size() > 0);
+
+    //accumulate depths at each of those locations
+      for(uint i = 0; i < depthLandmarks.size(); i++){
+        DepthStat d = f.doDepthMathAt(depthLandmarks[i].x-f.r.x,
+          depthLandmarks[i].y-f.r.y,2);
+        if(d.valid){
+          //depths.push_back(d.max);
+          depths.push_back(d.avg);
+          depths.push_back(d.mode);
+        }
       }
+    
+    //it's possible none of our queries were valid
+    if(depths.size() > 0){
+      hasGoodDepth = true;  
+      
+      //find max depth from any of the locations
+        float maxDepth = 0.0;
+        for(uint i = 0; i < depths.size(); i++){
+          if(depths[i] > maxDepth){
+            maxDepth = depths[i];
+          }
+        } 
+        depth = maxDepth;
+    }
 
   //if there's data worth checking
     if(hasGoodDepth){
       //check depth for hands!
-      
       DepthStat d = h.doDepthMath(ofRectangle(0,0,h.r.width,h.r.height));
       if(d.valid){
+        cout << "face Depth: " << depth << endl;
+        cout << "hand Depth: " <<  d.max << endl;
         if(d.max > depth){
           isRaisingHand = true;
         }
       }
     }
 }
+
+
