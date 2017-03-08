@@ -153,8 +153,9 @@ void ClassVisualizer::drawFrontalView() {
       person.drawFrontHandbox(ofColor::red);
       person.drawFrontPose(ofColor::yellow);
       person.drawFrontBBox(ofColor::orange);
+
       person.drawFrontLandmarks(ofColor::red);
-      person.drawFrontDepthPoints(ofColor::green);
+      person.drawFrontDepthPoints(ofColor::white);
 
       person.drawFrontPersonInfo(peopleFont);
 
@@ -182,6 +183,7 @@ void ClassVisualizer::drawFrontalView() {
 }
 
 void ClassVisualizer::drawBirdseyeView() {
+  depthTexture.draw(0, 0);
   for (auto const &person : people) {
     if(showDebug){
       person.drawTopColor();
@@ -243,9 +245,10 @@ void ClassVisualizer::drawLoadScreen(){
     x = 1100;
     y = 400;
 
-    ofSetColor(150, 150, 150);
-    ofDrawRectangle(x-15, y - 20, 1, 330);
-    helpFont.drawString(helpText, x, y);
+    //ofSetColor(150, 150, 150);
+    //ofDrawRectangle(x-15, y - 20, 1, 330);
+    //helpFont.drawString(helpText, x, y);
+    drawStringCentered(helpFont,helpText,1100,400,ofColor(0,0,0,0),ofColor(150,150,150));
   }
 
 void ClassVisualizer::drawInfoPanel() {
