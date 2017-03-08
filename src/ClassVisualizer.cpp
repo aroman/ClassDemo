@@ -11,9 +11,7 @@ ClassVisualizer::ClassVisualizer() {
       std::exit(1);
   }
 
-  openFace = new OpenFace(kinect->fx, kinect->fy, kinect->cx, kinect->cy);
-  openFace->doSetup();
-  openFace->startThread(true);
+  openFaceModelPool = new OpenFaceModelPool(openFaceModelPoolSize);
 
   faceDetector = new FaceDetector();
   faceDetector->startThread(true);
@@ -36,8 +34,7 @@ ClassVisualizer::~ClassVisualizer() {
   kinect->waitForThread(true);
   kinect->disconnect();
 
-  openFace->waitForThread(true);
-  delete openFace;
+  delete openFaceModelPool;
 }
 
 void ClassVisualizer::update() {
@@ -51,27 +48,45 @@ void ClassVisualizer::update() {
 
   if (!hasData) return;
 
-  // TS_START("update color texture");
-  // colorTexture.loadData(colorPixels);
-  // TS_STOP("update color texture");
+  TS_START("update color texture");
+  colorTexture.loadData(colorPixels);
+  TS_STOP("update color texture");
 
   faceDetector->updateImage(&colorPixels);
 
   peopleAccessMutex.lock();
   for (auto &person : people) {
     person.update(colorPixels, depthPixels);
+
+    // no active OpenFace model associated with this person
+    if (person.openFaceModel == nullptr) {
+      auto model = openFaceModelPool->getModel();
+      if (model == nullptr) {
+        ofLogWarning("Could not get model from pool!");
+        continue;
+      }
+      ofLogNotice("update get new model: ") << *model;
+      ofRectangle biasedAdjustedBBox = person.mtcnnBoundingBox;
+      biasedAdjustedBBox.x += (biasedAdjustedBBox.width * -0.0075);
+      biasedAdjustedBBox.y += (biasedAdjustedBBox.height * 0.2459);
+      biasedAdjustedBBox.width *= 1.0323;
+      biasedAdjustedBBox.height *= 0.7751;
+      bool initSuccess = model->initializeTracking(colorPixels, biasedAdjustedBBox);
+      if (initSuccess) {
+        person.openFaceModel = model;
+      } else {
+        openFaceModelPool->returnModel(model);
+      }
+    } else {
+      // existing model association
+      bool updateSuccess = person.openFaceModel->updateTracking(colorPixels);
+      if (!updateSuccess && person.openFaceModel->model->failures_in_a_row > MAX_MODEL_FAILURES_IN_A_ROW) {
+        openFaceModelPool->returnModel(person.openFaceModel);
+        person.openFaceModel = nullptr;
+      }
+    }
   }
   peopleAccessMutex.unlock();
-
-  if (openFace->isSetup && !people.empty()) {
-    TS_START("[OpenFace] update color pixel data");
-    openFace->updateImage(colorPixels);
-    TS_STOP("[OpenFace] update color pixel data");
-
-    TS_START("[OpenFace] update trackers");
-    openFace->updateTrackers();
-    TS_STOP("[OpenFace] update trackers");
-  }
 }
 
 void ClassVisualizer::draw() {
@@ -85,22 +100,12 @@ void ClassVisualizer::draw() {
 }
 
 void ClassVisualizer::drawFrontalView() {
-  // Draw OpenFace
-  TS_START("[OpenFace] draw");
-  ofPixels colorForMat;
-  colorForMat.setFromPixels(colorPixels.getData(), colorPixels.getWidth(), colorPixels.getHeight(), OF_IMAGE_COLOR_ALPHA);
-  colorForMat.swapRgb();
-  cv::Mat mat = ofxCv::toCv(colorForMat);
-  openFace->drawTo(mat);
-  ofxCv::drawMat(mat, 0, 0);
-  TS_STOP("[OpenFace] draw");
+  colorTexture.draw(0, 0);
 
   // Draw people
   for (auto const &person : people) {
     person.drawFrontalView();
   }
-
-  // colorTexture.draw(0, 0);
 
   ofDrawBitmapStringHighlight("Front Facing View", 960, 15);
 }
@@ -115,15 +120,52 @@ void ClassVisualizer::drawBirdseyeView() {
   ofDrawBitmapStringHighlight("front", 10, 1065);
 }
 
+static const int DIST_THRESH = 150;
+
 void ClassVisualizer::onFaceDetectionResults(const vector<ofRectangle> &bboxes) {
   ofLogNotice("ClassVisualizer") << "onFaceDetectionResults " << bboxes.size();
 
+
+  // TODO(avi) remove up people that mtcnn can't find anymore
   peopleAccessMutex.lock();
-  people.clear();
-  people.reserve(bboxes.size());
-  for (auto bbox : bboxes) {
-    people.push_back(Person(bbox));
+
+  for (int i = 0; i < people.size(); i++) {
+    people[i].isConfirmed = false;
   }
+
+  for (auto bbox : bboxes) {
+    int closestPersonIndex = -1;
+
+    float closestDistance = DIST_THRESH;
+    for (int i = 0; i < people.size(); i++) {
+      float dist = people[i].currentBoundingBox().getCenter().distance(bbox.getCenter());
+      if (dist < closestDistance) {
+        closestPersonIndex = i;
+        closestDistance = dist;
+      }
+    }
+
+    printf("closest distance: %f\n", closestDistance);
+    if (closestDistance < DIST_THRESH) {
+      assert (closestPersonIndex != -1);
+      // printf("updating existing person at index: %d\n", closestPersonIndex);
+      people[closestPersonIndex].updateMtcnnBoundingBox(bbox);
+    } else {
+      // printf("creating new person\n");
+      people.push_back(Person(bbox));
+    }
+  }
+
+  for (int i = 0; i < people.size(); i++) {
+    if (!people[i].isConfirmed) {
+      people.erase(people.begin() + i);
+    }
+  }
+
+  for (auto &person : people) {
+    ofLogNotice("ClassVisualizer") << "Person: " << person;
+  }
+
   peopleAccessMutex.unlock();
-  openFace->updateFaces(bboxes);
+
 }

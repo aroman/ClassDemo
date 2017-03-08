@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ofxCv.h"
 #include "ofMain.h"
+#include "OpenFaceModel.h"
 
 struct Space {
   ofRectangle r;
@@ -24,13 +24,22 @@ struct Space {
 
 struct Person {
   explicit Person(ofRectangle bbox);
+  bool operator==(const Person& other) const;
+  friend std::ostream& operator<<(std::ostream &strm, const Person &person);
 
-  Space f; // face
-  Space h; // hand-raise area
+  ofRectangle currentBoundingBox() const;
 
-  bool raisedHand = false;
+  std::shared_ptr<OpenFaceModel> openFaceModel;
+  ofRectangle mtcnnBoundingBox;
+  // ofRectangle openFace
+  bool isRaisingHand = false;
+  bool isConfirmed = false;
 
   void drawFrontalView() const;
   void drawBirdseyeView() const;
+  void updateMtcnnBoundingBox(ofRectangle bboxFromMtcnn);
   void update(const ofPixels &newColorPixels, const ofFloatPixels &newDepthPixels);
+
+  Space f; // face
+  Space h; // hand-raise area
 };

@@ -1,3 +1,4 @@
+#include "ofxCv.h"
 #include "Person.h"
 
 static const double HANDBOX_X_RATIO = 2.0;
@@ -97,14 +98,36 @@ void Space::updateColorPixels(const ofPixels &newColorPixels) {
 
 // Construct a person from a bounding box
 Person::Person(ofRectangle bbox) {
-  f.r = bbox;
+  updateMtcnnBoundingBox(bbox);
+}
+
+std::ostream& operator<<(std::ostream &strm, const Person &person) {
+  ofRectangle bb = person.currentBoundingBox();
+  if (person.openFaceModel != nullptr) {
+    return strm << "Person(x=" << bb.x << ", " << "y=" << bb.y << ", " << *person.openFaceModel << ")";
+  } else {
+    return strm << "Person(x=" << bb.x << ", " << "y=" << bb.y << ")";
+  }
+}
+
+void Person::updateMtcnnBoundingBox(ofRectangle bboxFromMtcnn) {
+  f.r = bboxFromMtcnn;
   f.r.scaleFromCenter(1.5);
+  mtcnnBoundingBox = bboxFromMtcnn;
+  isConfirmed = true;
+}
+
+ofRectangle Person::currentBoundingBox() const {
+    if (openFaceModel != nullptr && openFaceModel->isActive()) {
+      return openFaceModel->get2DBoundingBox();
+    }
+    return mtcnnBoundingBox;
 }
 
 void Person::drawFrontalView() const {
   drawBoundBox(h.r, ofColor::purple);
 
-  if (raisedHand) {
+  if (isRaisingHand) {
     drawBoundBox(f.r, ofColor::red);
   } else {
     drawBoundBox(f.r, ofColor::blue);
@@ -119,7 +142,7 @@ void Person::drawBirdseyeView() const {
 
   // f.colorPixels.draw(r.x, r.y);
 
-  if (raisedHand) {
+  if (isRaisingHand) {
     drawBoundBox(r, ofColor::red);
   } else {
     drawBoundBox(r, ofColor::blue);
@@ -179,10 +202,10 @@ void Person::update(const ofPixels &newColorPixels, const ofFloatPixels &newDept
   if (upper > 1.0) upper = 1.0;
 
   if ((val1 <= (upper)) && (val1 >= (lower))) {
-    raisedHand = true;
+    isRaisingHand = true;
   }
   else {
-    raisedHand = false;
+    isRaisingHand = false;
   }
 
   // cout << "face: " << endl;

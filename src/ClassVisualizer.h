@@ -3,9 +3,9 @@
 #include "ofMain.h"
 #include "ofxCv.h"
 #include "KinectHelper.h"
-#include "OpenFace.h"
 #include <GazeEstimation.h>
 #include "FaceDetector.h"
+#include "OpenFaceModelPool.h"
 #include "Person.h"
 
 enum class VisualizerMode {FRONTAL, BIRDSEYE};
@@ -18,12 +18,12 @@ public:
   void update();
   void draw();
   void onFaceDetectionResults(const vector<ofRectangle> &bboxes);
-  void onOpenFaceResults();
   VisualizerMode mode = VisualizerMode::FRONTAL;
 
 private:
+  static const size_t openFaceModelPoolSize = 1;
   ofPixels colorPixels;
-  ofFloatPixels depthPixels; // depth pixels in meters50
+  ofFloatPixels depthPixels; // depth pixels in meters
   ofTexture colorTexture;
 
   bool hasData = false;
@@ -36,6 +36,6 @@ private:
 
   KinectHelper *kinect = NULL;
   FaceDetector *faceDetector = NULL;
-  OpenFace *openFace = NULL;
+  OpenFaceModelPool *openFaceModelPool = NULL;
 
 };

@@ -21,11 +21,12 @@ option(COTIRE "Use cotire" ON)
 set(sources
   src/main.cpp
   src/ofApp.cpp
+  src/OpenFaceModel.cpp
+  src/OpenFaceModelPool.cpp
   src/ClassVisualizer.cpp
   src/KinectHelper.cpp
   src/FaceDetector.cpp
   src/MtcnnDetector.cpp
-  src/OpenFace.cpp
   src/Person.cpp
 )
 # set_source_files_properties(3rdParty/of/src/poco/Foundation/include/Poco/AtomicCounter.h PROPERTIES COMPILE_FLAGS -Wno-deprecated-declarations)

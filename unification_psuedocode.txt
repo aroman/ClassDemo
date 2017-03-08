@@ -1,7 +1,14 @@
 Thread A
 on update():
   for person in people:
-    if person.openFaceModel:
+    if not person.openFaceModel:
+      model = getRecycledOpenFaceModel() // from pool of unused models
+      success = model.initializeTracking(bbox)
+      if success:
+        person.openFaceModel = model
+      else:
+        recycleModel(model)
+    else:
       success = person.openFaceModel.updateTracking()
       if success: // tracking updated successfully
         person.currentBBox = person.openFaceModel.bbox
@@ -10,13 +17,7 @@ on update():
       else: // update tracking failed
         if person.model.failures_in_a_row > MAX_MODEL_FAILURES_IN_A_ROW:
           person.model = none
-    else: // no active OpenFace model associated with this person
-      model = getRecycledOpenFaceModel() // from pool of unused models
-      success = model.initializeTracking(bbox)
-      if success:
-        person.openFaceModel = model
-      else:
-        recycleModel(model)
+
 
 Thread A
 on draw():
