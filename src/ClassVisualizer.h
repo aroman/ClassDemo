@@ -32,7 +32,7 @@ public:
 
   ViewAngle mode = ViewAngle::FRONTAL;
   bool showHands = false; //press H or h
-  bool showCube = false; //press C or c
+  bool showPose = false; //press C or c
   bool showLandmarks = false; //press L or l
   bool showDepth = false; //press X or x
   bool showPersonInfo = false; //press I or i
@@ -67,11 +67,11 @@ private:
       ofColor lightBlue;
 
 
-  void drawTextboxCentered(string s, int x, int y, ofColor boxColor, ofColor textColor);
-  void drawTextboxTopLeft(string s, int x, int y, ofColor boxColor, ofColor textColor);
-  void drawTextboxTopRight(string s, int x, int y, ofColor boxColor, ofColor textColor);
-  void drawTextboxBottomLeft(string s, int x, int y, ofColor boxColor, ofColor textColor);
-  void drawTextboxBottomRight(string s, int x, int y, ofColor boxColor, ofColor textColor);
+  void drawStringCentered(ofTrueTypeFont font, string s, int x, int y, ofColor boxColor, ofColor textColor);
+  void drawStringTopLeft(ofTrueTypeFont font, string s, int x, int y, ofColor boxColor, ofColor textColor);
+  void drawStringTopRight(ofTrueTypeFont font, string s, int x, int y, ofColor boxColor, ofColor textColor);
+  void drawStringBottomLeft(ofTrueTypeFont font, string s, int x, int y, ofColor boxColor, ofColor textColor);
+  void drawStringBottomRight(ofTrueTypeFont font, string s, int x, int y, ofColor boxColor, ofColor textColor);
 
 
 

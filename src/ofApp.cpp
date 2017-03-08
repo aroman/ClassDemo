@@ -6,7 +6,7 @@ void ofApp::setup() {
 }
 
 void ofApp::update() {
-  //visualizer->update();
+  visualizer->update();
   std::stringstream strm;
   strm << "(" << floor(ofGetFrameRate()) << " FPS)";
   ofSetWindowTitle(strm.str());
@@ -50,7 +50,7 @@ void ofApp::keyReleased(int key) {
     case 67: //C - same as c
     case 99: //c - enables/disable cube view
       cout << "---------------toggling cube" << endl;
-      visualizer->showCube = !visualizer->showCube;
+      visualizer->showPose = !visualizer->showPose;
       break;
     case 76: //L - same as l
     case 108: //l - enables/disable landmarks
@@ -61,7 +61,7 @@ void ofApp::keyReleased(int key) {
     case 100: //d - resets to default settings
       cout << "---------------reset everything to default" << endl;
       visualizer->showHands = false;
-      visualizer->showCube = false;
+      visualizer->showPose = false;
       visualizer->showLandmarks = false;
       visualizer->showDepth = false;
       visualizer->showPersonInfo = false;

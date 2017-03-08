@@ -35,40 +35,40 @@ ClassVisualizer::ClassVisualizer() {
   //set colors
     lightBlue = ofColor(28,154,255);
 
-  // kinect = new KinectHelper();
+  kinect = new KinectHelper();
 
-  // bool didConnectSuccessfully = kinect->connect();
-  // if (!didConnectSuccessfully) {
-  //     std::exit(1);
-  // }
+  bool didConnectSuccessfully = kinect->connect();
+  if (!didConnectSuccessfully) {
+      std::exit(1);
+  }
 
-  // openFace = new OpenFace(kinect->fx, kinect->fy, kinect->cx, kinect->cy);
-  // openFace->doSetup();
-  // openFace->startThread(true);
+  openFace = new OpenFace(kinect->fx, kinect->fy, kinect->cx, kinect->cy);
+  openFace->doSetup();
+  openFace->startThread(true);
 
-  // faceDetector = new FaceDetector();
-  // faceDetector->startThread(true);
-  // // Might help performance a bit, we don't want it stealing CPU time
-  // // from the main/GL/draw thread!
-  // (&faceDetector->getPocoThread())->setPriority(Poco::Thread::PRIO_LOWEST);
-  // ofAddListener(
-  //   faceDetector->onDetectionResults,
-  //   this,
-  //   &ClassVisualizer::onFaceDetectionResults
-  // );
+  faceDetector = new FaceDetector();
+  faceDetector->startThread(true);
+  // Might help performance a bit, we don't want it stealing CPU time
+  // from the main/GL/draw thread!
+  (&faceDetector->getPocoThread())->setPriority(Poco::Thread::PRIO_LOWEST);
+  ofAddListener(
+    faceDetector->onDetectionResults,
+    this,
+    &ClassVisualizer::onFaceDetectionResults
+  );
 }
 
 ClassVisualizer::~ClassVisualizer() {
-//   people.clear();
+  people.clear();
 
-//   faceDetector->waitForThread(true);
-//   delete faceDetector;
+  faceDetector->waitForThread(true);
+  delete faceDetector;
 
-//   kinect->waitForThread(true);
-//   kinect->disconnect();
+  kinect->waitForThread(true);
+  kinect->disconnect();
 
-//   openFace->waitForThread(true);
-//   delete openFace;
+  openFace->waitForThread(true);
+  delete openFace;
 }
 
 void ClassVisualizer::update() {
@@ -151,18 +151,87 @@ void ClassVisualizer::drawBirdseyeView() {
     person.drawBirdseyeView();
   }
 
-  ofDrawBitmapStringHighlight("back", 540, 15);
-  ofDrawBitmapStringHighlight("front", 540, 1065);
+  drawStringTopLeft(demoFont,"back",540,15,ofColor(0,0,0,0),ofColor::white);
+  drawStringTopLeft(demoFont,"back",540,1065,ofColor(0,0,0,0),ofColor::white);
 }
 
 
-void ClassVisualizer::drawTextboxCentered(string s, int xc, int yc, ofColor boxColor, ofColor textColor){
-  //do some voodoo
-  int sw = (demoFont.stringWidth(s));
-  int sh = (demoFont.stringHeight(s));
 
-  int sw1 = sw * 1.025;
-  int sh1 = sh * 1.325;
+void ClassVisualizer::drawLoadScreen(){
+  int x, y;
+
+  //draw background
+    int trim = 100;
+    ofSetColor(28,154,255); //sensei light blue
+    ofFill();
+    ofDrawRectangle(0,0,screenWidth, screenHeight);
+
+    ofSetColor(255,255,255); //white
+    ofFill();
+    ofDrawRectangle(0,trim,screenWidth, screenHeight-(2*trim));
+  
+  //draw main logo
+    int logoWidth = 800;
+    int logoHeight = 277;
+
+    x = 100;
+    y = (screenHeight/2) - (logoHeight/2);
+
+    fullLogo.draw(x,y,logoWidth,logoHeight);
+
+  //draw text about program version
+    x = 20;
+    y = 30;
+
+    drawStringTopLeft(demoFont, aboutText[0], x, y,ofColor(0,0,0,0),ofColor(255,255,255,100));
+  
+  //draw help text
+    x = 1100;
+    y = 400;
+
+    ofSetColor(150, 150, 150);
+    ofDrawRectangle(x-15, y - 20, 1, 330);
+    helpFont.drawString(helpText, x, y);
+  }
+
+void ClassVisualizer::drawInfoPanel() {
+  int x = 50;
+  int y = screenHeight - 50;
+
+  if(mode == ViewAngle::FRONTAL){
+    drawStringBottomLeft(demoFont,"Mode: Front View", x, y, ofColor(255,255,255,100), ofColor::white);   
+  }
+  else{
+    drawStringBottomLeft(demoFont,"Mode: Top View", x, y, ofColor(255,255,255,100), ofColor::white);
+  }
+
+  y += 40;
+
+  string numStudents = "Number of Students: " + ofToString(people.size());
+  drawStringBottomLeft(demoFont, numStudents, x, y, ofColor(255,255,255,100), ofColor::white); 
+
+  }
+
+void ClassVisualizer::onFaceDetectionResults(const vector<ofRectangle> &bboxes) {
+  ofLogNotice("ClassVisualizer") << "onFaceDetectionResults " << bboxes.size();
+
+  peopleAccessMutex.lock();
+  people.clear();
+  people.reserve(bboxes.size());
+  for (auto bbox : bboxes) {
+    people.push_back(Person(bbox));
+  }
+  peopleAccessMutex.unlock();
+  openFace->updateFaces(bboxes);
+}
+
+void ClassVisualizer::drawStringCentered(ofTrueTypeFont font, string s, int xc, int yc, ofColor boxColor, ofColor textColor){
+  //do some voodoo
+  int sw = (font.stringWidth(s));
+  int sh = (font.stringHeight(s));
+
+  int sw1 = sw * 1.05;
+  int sh1 = sh * 1.8;
 
   int x1 = xc - (sw1/2);
   int y1 = yc - (sh1/2);
@@ -178,15 +247,15 @@ void ClassVisualizer::drawTextboxCentered(string s, int xc, int yc, ofColor boxC
   int y2 = yc - ((sh2*1.3)/2);
 
   ofSetColor(textColor);
-  demoFont.drawString(s, x2, y2 + (sh2));}
+  font.drawString(s, x2, y2 + (sh2));}
 
-void ClassVisualizer::drawTextboxTopLeft(string s, int xl, int yl, ofColor boxColor, ofColor textColor){
+void ClassVisualizer::drawStringTopLeft(ofTrueTypeFont font, string s, int xl, int yl, ofColor boxColor, ofColor textColor){
   //do some voodoo
-  int sw = (demoFont.stringWidth(s));
-  int sh = (demoFont.stringHeight(s));
+  int sw = (font.stringWidth(s));
+  int sh = (font.stringHeight(s));
 
-  int sw1 = sw * 1.025;
-  int sh1 = sh * 1.325;
+  int sw1 = sw * 1.05;
+  int sh1 = sh * 1.8;
 
   int x1 = xl;
   int y1 = yl;
@@ -205,16 +274,16 @@ void ClassVisualizer::drawTextboxTopLeft(string s, int xl, int yl, ofColor boxCo
   int y2 = yc - ((sh2*1.3)/2);
 
   ofSetColor(textColor);
-  demoFont.drawString(s, x2, y2 + (sh2));}
+  font.drawString(s, x2, y2 + (sh2));}
 
-void ClassVisualizer::drawTextboxTopRight(string s, int xr, int yr, ofColor boxColor, ofColor textColor){
+void ClassVisualizer::drawStringTopRight(ofTrueTypeFont font, string s, int xr, int yr, ofColor boxColor, ofColor textColor){
 
   //do some voodoo
-  int sw = (demoFont.stringWidth(s));
-  int sh = (demoFont.stringHeight(s));
+  int sw = (font.stringWidth(s));
+  int sh = (font.stringHeight(s));
 
-  int sw1 = sw * 1.025;
-  int sh1 = sh * 1.325;
+  int sw1 = sw * 1.05;
+  int sh1 = sh * 1.8;
 
   xr -= sw1;
 
@@ -235,16 +304,16 @@ void ClassVisualizer::drawTextboxTopRight(string s, int xr, int yr, ofColor boxC
   int y2 = yc - ((sh2*1.3)/2);
 
   ofSetColor(textColor);
-  demoFont.drawString(s, x2, y2 + (sh2));}
+  font.drawString(s, x2, y2 + (sh2));}
 
-void ClassVisualizer::drawTextboxBottomLeft(string s, int xl, int yl, ofColor boxColor, ofColor textColor){
+void ClassVisualizer::drawStringBottomLeft(ofTrueTypeFont font, string s, int xl, int yl, ofColor boxColor, ofColor textColor){
 
   //do some voodoo
-  int sw = (demoFont.stringWidth(s));
-  int sh = (demoFont.stringHeight(s));
+  int sw = (font.stringWidth(s));
+  int sh = (font.stringHeight(s));
 
-  int sw1 = sw * 1.025;
-  int sh1 = sh * 1.325;
+  int sw1 = sw * 1.05;
+  int sh1 = sh * 1.8;
 
   yl -= sh1;
 
@@ -265,16 +334,16 @@ void ClassVisualizer::drawTextboxBottomLeft(string s, int xl, int yl, ofColor bo
   int y2 = yc - ((sh2*1.3)/2);
 
   ofSetColor(textColor);
-  demoFont.drawString(s, x2, y2 + (sh2));}
+  font.drawString(s, x2, y2 + (sh2));}
 
-void ClassVisualizer::drawTextboxBottomRight(string s, int xr, int yr, ofColor boxColor, ofColor textColor){
+void ClassVisualizer::drawStringBottomRight(ofTrueTypeFont font, string s, int xr, int yr, ofColor boxColor, ofColor textColor){
 
   //do some voodoo
-  int sw = (demoFont.stringWidth(s));
-  int sh = (demoFont.stringHeight(s));
+  int sw = (font.stringWidth(s));
+  int sh = (font.stringHeight(s));
 
-  int sw1 = sw * 1.025;
-  int sh1 = sh * 1.325;
+  int sw1 = sw * 1.05;
+  int sh1 = sh * 1.8;
 
   xr -= sw1;
   yr -= sh1;
@@ -296,124 +365,5 @@ void ClassVisualizer::drawTextboxBottomRight(string s, int xr, int yr, ofColor b
   int y2 = yc - ((sh2*1.3)/2);
 
   ofSetColor(textColor);
-  demoFont.drawString(s, x2, y2 + (sh2));}
+  font.drawString(s, x2, y2 + (sh2));}
 
-void ClassVisualizer::drawLoadScreen(){
-  //ofEnableAlphaBlending();
-  //ofDisableAlphaBlending(); 
-
-  ofColor red;
-  red.r=255;
-  red.g=0;
-  red.b=0;
-  ofSetColor(red);
-
-  int trim = 100;
-
-  ofSetColor(ofColor::black);
-  ofFill();
-  ofDrawRectangle(0,0,screenWidth,screenHeight);
-
-
-  int xc = screenWidth /2;
-  int yc = screenHeight /2;
-
-  demoFont.load("/opt/sensei/Hack-Regular.ttf", 40, true);
-  drawTextboxCentered(aboutText[1], xc, yc, ofColor::red, ofColor::white);
-  drawTextboxTopLeft(aboutText[1], 0, 0, ofColor::red, ofColor::white);
-  drawTextboxTopRight(aboutText[1], 1920, 0, ofColor::red, ofColor::white);
-  drawTextboxBottomLeft(aboutText[1], 0, 1080, ofColor::red, ofColor::white);
-  drawTextboxBottomRight(aboutText[1], 1920, 1080, ofColor::red, ofColor::white);
-
-  /*
-  demoFont.load("/opt/sensei/Hack-Regular.ttf", 20, true);
-  drawTextboxCentered(aboutText[1], xc, yc, ofColor::blue, ofColor::white);
-  drawTextboxTopLeft(aboutText[1], 0, 0, ofColor::blue, ofColor::white);
-  drawTextboxTopRight(aboutText[1], 1920, 0, ofColor::blue, ofColor::white);
-  drawTextboxBottomLeft(aboutText[1], 0, 1080, ofColor::blue, ofColor::white);
-  drawTextboxBottomRight(aboutText[1], 1920, 1080, ofColor::blue, ofColor::white);
-  */
-
-  ofSetColor(ofColor::red);
-  ofDrawRectangle(xc-1,yc-1,3,3);
-
-  /*
-  //draw background
-    ofSetColor(28,154,255); //sensei light blue
-    ofFill();
-    ofDrawRectangle(0,0,screenWidth, screenHeight);
-
-    ofSetColor(255,255,255); //white
-    ofFill();
-    ofDrawRectangle(0,trim,screenWidth, screenHeight-(2*trim));
-  
-  //draw main logo
-    int logoWidth = 800;
-    int logoHeight = 277;
-
-    int x = 100;
-    int y = (h/2) - (logoHeight/2);
-
-    fullLogo.draw(x,y,logoWidth,logoHeight);
-
-  //draw text about program version
-    x = 50;
-    y = 50;
-
-    ofSetColor(255,255,255);
-    demoFont.drawString(aboutText[0], x, y);
-  
-
-  //draw help text
-    x = 1100;
-    y = 400;
-
-    ofSetColor(150, 150, 150);
-    ofDrawRectangle(x-15, y - 20, 1, 330);
-    helpFont.drawString(helpText, x, y);
-  */ 
-}
-
-void ClassVisualizer::drawInfoPanel() {
-
-  ofSetColor(255,255,255,50); //white
-  ofFill();
-  int imageHeight = 1080;
-  int boxHeight = 100;
-  int boxWidth = 350;
-
-  string numStudents = "Number of Students: " + ofToString(people.size());
-  boxWidth = (int)demoFont.stringWidth(numStudents);
-  
-  int padding = 20;
-  int x = padding;
-  int y = imageHeight - padding - boxHeight;
-  ofDrawRectangle(x, y, boxWidth, boxHeight);
-
-  x += 15;
-  y += lineSpace;
-
-  ofSetColor(0,0,0,100);
-
-  y += lineSpace;
-  if(mode == ViewAngle::FRONTAL){
-    demoFont.drawString("Mode: Front View", x, y);
-  }
-  else{
-    demoFont.drawString("Mode: Top View", x, y);
-  }
-  //ofDrawBitmapStringHighlight("Number of Students: " + ofToString(people.size()), 50, 900);
-}
-
-void ClassVisualizer::onFaceDetectionResults(const vector<ofRectangle> &bboxes) {
-  ofLogNotice("ClassVisualizer") << "onFaceDetectionResults " << bboxes.size();
-
-  peopleAccessMutex.lock();
-  people.clear();
-  people.reserve(bboxes.size());
-  for (auto bbox : bboxes) {
-    people.push_back(Person(bbox));
-  }
-  peopleAccessMutex.unlock();
-  openFace->updateFaces(bboxes);
-}
