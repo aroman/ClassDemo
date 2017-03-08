@@ -11,6 +11,7 @@ int main() {
   ofSetFrameRate(30);
   ofSetVerticalSync(false);
 
+  ofSetDataPathRoot("data");
 
   ofSetWindowTitle("sensei");
 

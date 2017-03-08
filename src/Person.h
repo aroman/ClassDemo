@@ -77,7 +77,9 @@ struct Person {
   Space h; // hand-raise area
 
   vector<ofPoint> depthLandmarks;
+
   float dotRadius = 1;
+
   float depth;
   int y_depth;
   string name;

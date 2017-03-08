@@ -31,8 +31,6 @@ set(sources
 )
 # set_source_files_properties(3rdParty/of/src/poco/Foundation/include/Poco/AtomicCounter.h PROPERTIES COMPILE_FLAGS -Wno-deprecated-declarations)
 
-file(GLOB_RECURSE models models)
-
 ### dependencies
 find_package(OpenCV 3.2 REQUIRED)
 find_package(Boost 1.36.0 COMPONENTS filesystem system REQUIRED)
@@ -73,7 +71,10 @@ target_include_directories(${APP} PUBLIC src/main)
 
 # this copies all resource files in the build directory
 # we need this, because we want to work with paths relative to the executable
-file(COPY ${models} DESTINATION models)
+# file(GLOB_RECURSE models models)
+# file(GLOB_RECURSE assets assets)
+# file(COPY ${models} DESTINATION models)
+# file(COPY ${assets} DESTINATION assets)
 
 target_link_libraries(${APP} PUBLIC
   ${PYTHON_LIBRARIES}
@@ -95,7 +96,9 @@ install(TARGETS ${APP} DESTINATION .)
 # this is basically a repeat of the file copy instruction that copies the
 # resources in the build directory, but here we tell cmake that we want it
 # in the package
-install(DIRECTORY models DESTINATION .)
+install(DIRECTORY assets/models DESTINATION .)
+install(DIRECTORY assets/images DESTINATION data)
+install(DIRECTORY assets/fonts DESTINATION data)
 install(FILES src/mtcnn_runner.py DESTINATION .)
 
 if (COTIRE)

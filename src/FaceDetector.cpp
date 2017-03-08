@@ -8,12 +8,12 @@ FaceDetector::FaceDetector() {
 
 FaceDetector::~FaceDetector() {
   stopThread();
-  if (detector != NULL) delete detector;
+  if (detector != nullptr) delete detector;
 }
 
-void FaceDetector::updateImage(ofPixels *newImage) {
+void FaceDetector::updateImage(ofPixels newColorPixels) {
   mutex.lock();
-  image = newImage;
+  colorPixels = newColorPixels;
   mutex.unlock();
   isImageDirty = true;
 }
@@ -25,30 +25,30 @@ void FaceDetector::threadedFunction() {
       continue;
     }
 
-    // resize the imageCopy to the size of imageScaled
-    ofPixels imageScaled;
+    ofPixels scaledColorPixels;
     mutex.lock();
-    ofPixels imageCopy = *image;
+    ofPixels copyColorPixels = colorPixels;
     mutex.unlock();
     yield();
 
-    imageScaled.allocate(
-      imageCopy.getWidth() / scaleFactor,
-      imageCopy.getHeight() / scaleFactor,
-      imageCopy.getPixelFormat()
+    // resize the copyColorPixels to the size of scaledColorPixels
+    scaledColorPixels.allocate(
+      copyColorPixels.getWidth() / scaleFactor,
+      copyColorPixels.getHeight() / scaleFactor,
+      copyColorPixels.getPixelFormat()
     );
     yield();
-    imageCopy.resizeTo(imageScaled);
+    copyColorPixels.resizeTo(scaledColorPixels);
 
-    cv::Mat imageScaledMat = ofxCv::toCv(imageScaled);
+    cv::Mat scaledColorMat = ofxCv::toCv(scaledColorPixels);
 
     // Drop the (unused) alpha channel
-    cv::cvtColor(imageScaledMat, imageScaledMat, CV_BGRA2BGR);
+    cv::cvtColor(scaledColorMat, scaledColorMat, CV_BGRA2BGR);
 
     yield();
     mtcnn_detect_results results;
     TS_START("[MTCNN] detect faces");
-    results = detector->detectFaces(imageScaledMat);
+    results = detector->detectFaces(scaledColorMat);
     TS_STOP("[MTCNN] detect faces");
     yield();
 

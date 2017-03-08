@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ofMain.h"
+#include <GazeEstimation.h>
 #include "LandmarkCoreIncludes.h"
 
 static const int MAX_MODEL_FAILURES_IN_A_ROW = 3;
@@ -25,6 +26,7 @@ public:
   // Methods to access OpenFace model data with OpenFrameworks types
   ofRectangle get2DBoundingBox() const;
   std::vector<std::pair<ofVec2f, ofVec2f>> get3DBoundingBox() const;
+  std::pair<ofVec3f, ofVec3f> getGazeDirection() const;
   std::vector<ofVec2f> getLandmarks() const;
   ofPolyline getLandmarksPolyline() const;
   std::vector<double> getPoseCamera() const; // [Tx, Ty, Tz, Eul_x, Eul_y, Eul_z]

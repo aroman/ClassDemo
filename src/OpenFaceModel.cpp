@@ -109,6 +109,31 @@ ofPolyline OpenFaceModel::getLandmarksPolyline() const {
   return ofxCv::toOf(CalculateLandmarks(*model));
 }
 
+std::pair<ofVec3f, ofVec3f> OpenFaceModel::getGazeDirection() const {
+  assert(model != nullptr);
+  cv::Point3f leftEyeGaze(0, 0, -1);
+  cv::Point3f rightEyeGaze(0, 0, -1);
+  FaceAnalysis::EstimateGaze(
+    *model,
+    leftEyeGaze,
+    cameraIntrinsics.fx,
+    cameraIntrinsics.fy,
+    cameraIntrinsics.cx,
+    cameraIntrinsics.cy,
+    true // isLeftEye -> true
+  );
+  FaceAnalysis::EstimateGaze(
+    *model,
+    rightEyeGaze,
+    cameraIntrinsics.fx,
+    cameraIntrinsics.fy,
+    cameraIntrinsics.cx,
+    cameraIntrinsics.cy,
+    false // isLeftEye -> false
+  );
+  return std::make_pair(ofxCv::toOf(leftEyeGaze), ofxCv::toOf(rightEyeGaze));
+}
+
 std::vector<ofVec2f> OpenFaceModel::getLandmarks() const {
   assert(model != nullptr);
   std::vector<cv::Point2d> landmarks = CalculateLandmarks(*model);

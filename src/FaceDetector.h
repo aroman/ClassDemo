@@ -11,7 +11,7 @@ public:
     FaceDetector();
     ~FaceDetector();
     void threadedFunction();
-    void updateImage(ofPixels *newImage);
+    void updateImage(ofPixels colorPixels);
 
     const double scaleFactor = 4.0;
     ofEvent<const vector<ofRectangle>> onDetectionResults;
@@ -20,8 +20,6 @@ private:
     MtcnnDetector *detector;
     bool isImageDirty;
 
-    ofPixels *image;
-    // image scaled down by DOWNSCALE_FACTOR
-    ofPixels imageScaled;
+    ofPixels colorPixels;
 
 };
