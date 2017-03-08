@@ -37,6 +37,7 @@ struct Person {
 
   void drawFrontalView() const;
   void drawBirdseyeView() const;
+  void recalculateBoundingBox();
   void updateMtcnnBoundingBox(ofRectangle bboxFromMtcnn);
   void update(const ofPixels &newColorPixels, const ofFloatPixels &newDepthPixels);
 

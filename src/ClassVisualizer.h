@@ -34,8 +34,8 @@ private:
   void drawFrontalView();
   void drawBirdseyeView();
 
-  KinectHelper *kinect = NULL;
-  FaceDetector *faceDetector = NULL;
-  OpenFaceModelPool *openFaceModelPool = NULL;
+  KinectHelper *kinect = nullptr;
+  FaceDetector *faceDetector = nullptr;
+  OpenFaceModelPool *openFaceModelPool = nullptr;
 
 };

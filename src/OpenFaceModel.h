@@ -3,7 +3,7 @@
 #include "ofMain.h"
 #include "LandmarkCoreIncludes.h"
 
-static const int MAX_MODEL_FAILURES_IN_A_ROW = 1;
+static const int MAX_MODEL_FAILURES_IN_A_ROW = 3;
 static const double MIN_CERTAINTY_FOR_VISUALIZATION = 0.35;
 
 class OpenFaceModel {

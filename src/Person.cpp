@@ -111,10 +111,14 @@ std::ostream& operator<<(std::ostream &strm, const Person &person) {
 }
 
 void Person::updateMtcnnBoundingBox(ofRectangle bboxFromMtcnn) {
-  f.r = bboxFromMtcnn;
-  f.r.scaleFromCenter(1.5);
   mtcnnBoundingBox = bboxFromMtcnn;
+  recalculateBoundingBox();
   isConfirmed = true;
+}
+
+void Person::recalculateBoundingBox() {
+  f.r = currentBoundingBox();
+  f.r.scaleFromCenter(1.5);
 }
 
 ofRectangle Person::currentBoundingBox() const {
@@ -152,6 +156,7 @@ void Person::drawBirdseyeView() const {
 }
 
 void Person::update(const ofPixels &newColorPixels, const ofFloatPixels &newDepthPixels) {
+  recalculateBoundingBox();
   // Create handbox
   auto h_w = HANDBOX_X_RATIO * f.r.width;
   auto h_h = (HANDBOX_Y_RATIO * f.r.height);
