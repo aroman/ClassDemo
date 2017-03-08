@@ -7,8 +7,9 @@ cv::Mat colorPixelsToGrayscaleMat(ofPixels colorPixels) {
   return grayscaleMat;
 }
 
-OpenFaceModel::OpenFaceModel(int id) {
+OpenFaceModel::OpenFaceModel(int id, CameraIntrinsics cameraIntrinsics) {
   this->id = id;
+  this->cameraIntrinsics = cameraIntrinsics;
 
   this->parameters = new LandmarkDetector::FaceModelParameters();
   // maybe try turning it off, doesn't make much difference

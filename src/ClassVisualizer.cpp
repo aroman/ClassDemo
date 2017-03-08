@@ -11,7 +11,12 @@ ClassVisualizer::ClassVisualizer() {
       std::exit(1);
   }
 
-  openFaceModelPool = new OpenFaceModelPool(openFaceModelPoolSize);
+  openFaceModelPool = new OpenFaceModelPool(openFaceModelPoolSize, CameraIntrinsics{
+    kinect->fx,
+    kinect->fy,
+    kinect->cx,
+    kinect->cy
+  });
 
   faceDetector = new FaceDetector();
   faceDetector->startThread(true);

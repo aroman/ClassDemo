@@ -7,7 +7,7 @@ using std::shared_ptr;
 class OpenFaceModelPool {
 
 public:
-  OpenFaceModelPool(size_t poolSize);
+  OpenFaceModelPool(size_t poolSize, CameraIntrinsics cameraIntrinsics);
   ~OpenFaceModelPool();
   shared_ptr<OpenFaceModel> getModel();
   void returnModel(shared_ptr<OpenFaceModel> model);

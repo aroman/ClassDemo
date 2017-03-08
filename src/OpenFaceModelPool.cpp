@@ -17,7 +17,7 @@ void printModels(const std::vector<shared_ptr<OpenFaceModel>> &vec) {
   std::cout << endl;
 }
 
-OpenFaceModelPool::OpenFaceModelPool(size_t poolSize) {
+OpenFaceModelPool::OpenFaceModelPool(size_t poolSize, CameraIntrinsics cameraIntrinsics) {
   this->poolSize = poolSize;
 
   freeModels.reserve(poolSize);
@@ -25,7 +25,7 @@ OpenFaceModelPool::OpenFaceModelPool(size_t poolSize) {
 
   ofLogNotice("OpenFaceModelPool") << "Allocating models...";
   for (int i = 0; i < poolSize; ++i) {
-    shared_ptr<OpenFaceModel> model(new OpenFaceModel(i));
+    shared_ptr<OpenFaceModel> model(new OpenFaceModel(i, cameraIntrinsics));
     freeModels.push_back(std::move(model));
     ofLogNotice("OpenFaceModelPool") << "Allocated model " << i+1 << " of " << poolSize;
   }

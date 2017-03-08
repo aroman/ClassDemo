@@ -6,10 +6,14 @@
 static const int MAX_MODEL_FAILURES_IN_A_ROW = 3;
 static const double MIN_CERTAINTY_FOR_VISUALIZATION = 0.35;
 
+struct CameraIntrinsics {
+  float fx, fy, cx, cy;
+};
+
 class OpenFaceModel {
 
 public:
-  explicit OpenFaceModel(int id);
+  explicit OpenFaceModel(int id, CameraIntrinsics cameraIntrinsics);
   ~OpenFaceModel();
   bool operator==(const OpenFaceModel& other) const;
   friend std::ostream& operator<<(std::ostream &strm, const OpenFaceModel &model);
@@ -19,6 +23,7 @@ public:
   void reset();
 
   ofRectangle get2DBoundingBox() const;
+  ofRectangle get3() const;
   double getX() const;
   double getY() const;
   bool isActive() const;
@@ -28,6 +33,7 @@ public:
 
 private:
   int id; // used for keeping track in the pool
+  CameraIntrinsics cameraIntrinsics;
   float fx, fy, cx, cy;
 
 };
