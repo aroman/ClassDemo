@@ -158,6 +158,7 @@ void ClassVisualizer::onFaceDetectionResults(const vector<ofRectangle> &bboxes) 
 
   for (int i = 0; i < people.size(); i++) {
     if (!people[i].isConfirmed) {
+      openFaceModelPool->returnModel(people[i].openFaceModel);
       people.erase(people.begin() + i);
     }
   }

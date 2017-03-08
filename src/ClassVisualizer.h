@@ -21,7 +21,7 @@ public:
   VisualizerMode mode = VisualizerMode::FRONTAL;
 
 private:
-  static const size_t openFaceModelPoolSize = 1;
+  static const size_t openFaceModelPoolSize = 3;
   ofPixels colorPixels;
   ofFloatPixels depthPixels; // depth pixels in meters
   ofTexture colorTexture;

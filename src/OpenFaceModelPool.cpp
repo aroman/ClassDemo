@@ -42,7 +42,7 @@ OpenFaceModelPool::~OpenFaceModelPool() {
 
 shared_ptr<OpenFaceModel> OpenFaceModelPool::getModel() {
   if (freeModels.empty()) {
-    ofLogNotice("OpenFaceModelPool") << "getModel(): No free models!";
+    ofLogNotice("OpenFaceModelPool") << "getModel(): No free models! Models in use: " << usedModels.size();
     return nullptr;
   }
   shared_ptr<OpenFaceModel> freeModel = freeModels.back();
