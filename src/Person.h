@@ -61,6 +61,7 @@ struct Person {
   void drawTopColor() const;
 
   void drawFrontDepthPoints(ofColor c) const;
+
   ofFloatPixels thresholdDepthPixels;
   void drawFrontHandThresholded() const;
   int callThresholdPixels(float low, float high);
@@ -91,9 +92,16 @@ struct Person {
   float depth;
   int y_depth;
 
-  float offsetFront = 0.1;
-  float offsetBack = 0.02;
-  float threshold = 0.11;
+  float offsetFront = 0.075;
+  float offsetBack = 0.035;
+  float tempBack = offsetBack;
+  float threshold = 0.05;
+
+  float test1 = -2.0;
+  float test2 = -2.0;
+  float test3 = -2.0;
+  float test4 = -2.0;
+  float test5 = 1.0;
 
 
   bool isConfirmed = false;

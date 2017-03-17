@@ -4,7 +4,7 @@
 #include "drawUtils.h"
 
 static const double FACE_SCALE_RATIO = 1.5;
-static const double HANDBOX_X_RATIO = 2.5;
+static const double HANDBOX_X_RATIO = 2.4;
 static const double HANDBOX_Y_RATIO = 2.0;
 
 #define SCREEN_HEIGHT (1080)
@@ -24,7 +24,7 @@ void Person::recalculateBoundingBox() {
   auto h_h = HANDBOX_Y_RATIO * f.r.height;
   h.r = ofRectangle(
     f.r.x + (f.r.width/2.0) - (h_w/2.0),
-    f.r.y - h_h - ((1.5*f.r.height)/2.0),
+    f.r.y - h_h - ((1.0*f.r.height)/2.0),
     h_w,
     h_h
   );
@@ -511,14 +511,14 @@ void Person::drawTopPersonInfo(ofTrueTypeFont font) const{
 }
 
 void Person::drawPersonInfo(ofTrueTypeFont font, int x, int y) const{
-  x += 15;
+  x += 17;
 
   ofColor text = ofColor(0,0,0,255);
 
   ofSetColor(ofColor(205,205,205,140));
   ofFill();
 
-  ofDrawRectRounded(x, y, 250, f.r.height, 30.0);
+  ofDrawRectRounded(x, y, 260, 125, 30.0);
 
   x += 10;
   y += 10;
@@ -536,6 +536,34 @@ void Person::drawPersonInfo(ofTrueTypeFont font, int x, int y) const{
     y += font.getLineHeight();
     drawStringTopLeft(font, s, x, y, ofColor(0,0,0,0), text);
   }
+  else{
+    s = "Hand raised: No";
+    y += font.getLineHeight();
+    drawStringTopLeft(font, s, x, y, ofColor(0,0,0,0), text);
+  }
+
+  //DELETE
+  /*
+  s = "count: " + ofToString((int)(test1));
+  y += font.getLineHeight();
+  drawStringTopLeft(font, s, x, y, ofColor::red, text);
+
+  s = "total: " + ofToString((int)(test3));
+  y += font.getLineHeight();
+  drawStringTopLeft(font, s, x, y, ofColor::red, text);
+
+  s = "ratio: " + ofToString((test2)) + " / " + ofToString((threshold));
+  y += font.getLineHeight();
+  drawStringTopLeft(font, s, x, y, ofColor::red, text);
+
+  s = "avg handbox depth: " + ofToString((test4));
+  y += font.getLineHeight();
+  drawStringTopLeft(font, s, x, y, ofColor::red, text);
+
+  s = "is okay: " + ofToString((test5));
+  y += font.getLineHeight();
+  drawStringTopLeft(font, s, x, y, ofColor::red, text);
+  */
 }
 
 void Person::update(const ofPixels &newColorPixels, const ofFloatPixels &newDepthPixels) {
@@ -587,12 +615,19 @@ void Person::update(const ofPixels &newColorPixels, const ofFloatPixels &newDept
 
     assert(depthLandmarks.size() > 0);
 
+      ofRectangle tr;
+      tr.x = 0;
+      tr.y = 0;
+      tr.width = h.r.width;
+      tr.height = h.r.height;
+
+      DepthStat test = h.doDepthMath(tr);
     //accumulate depths at each of those locations
       for(uint i = 0; i < depthLandmarks.size(); i++){
         //cout << "===========> FACE >=============== " << endl;
         DepthStat d = f.doDepthMathAt(depthLandmarks[i].x-f.r.x,
           depthLandmarks[i].y-f.r.y,1+(dotRadius*2));
-        //cout << "===========< FACE <=============== " << endl;
+        //cout << FACE <=============== " << endl;
         if(d.valid){
           depths.push_back(d.max);
           depths.push_back(d.avg);
@@ -613,7 +648,7 @@ void Person::update(const ofPixels &newColorPixels, const ofFloatPixels &newDept
 
         depth = maxDepth;
         //y_depth = (int)((SCREEN_HEIGHT * (depth - MIN_MILLIMETERS))/(MAX_MILLIMETERS - MIN_MILLIMETERS));
-        y_depth = (int)((SCREEN_HEIGHT) * (0.1 + (0.6*(depth))));
+        y_depth = (int)((SCREEN_HEIGHT) * (1.0 - (0.1 + (0.6*(depth)))));
 
         //cout << "face Depth: " << depth << endl;
         //cout << "y_depth: " << y_depth << endl;
@@ -622,46 +657,36 @@ void Person::update(const ofPixels &newColorPixels, const ofFloatPixels &newDept
           hasGoodDepth = true;
         }
     }
-
+    test1 = -3.0;
+    test2 = -3.0;
+    test3 = -3.0;
+    test4 = -3.0;
+    test5 = 1.0;
   //if there's data worth checking
     if(hasGoodDepth){
+      tempBack = offsetBack;
+      if((depth - test.avg)  < (2.25 * offsetBack)){
+        tempBack = 0.0175; //depth - (test.avg + 0.005);
+        test5 = 0.0;
+      }
 
-      int count = callThresholdPixels(depth - offsetBack, depth + offsetFront);
+      int count = callThresholdPixels(depth - tempBack, depth + offsetFront);
+      test1 = (float)count;
+      test2 = -1.0;
+      test3 = (float)(h.r.width * h.r.height);
+      test4 = test.avg;
 
       if((h.r.width * h.r.height) > 0){
         float ratio = ((float)count)/((float)(h.r.width * h.r.height));
+
+        test2 = ratio;
         //cout << "ratio: " << ratio << " / " << threshold << endl;
 
         if(ratio > threshold){
           isRaisingHand = true;
         }
       }
-      /*
-      //cout << "+++++++++++ count threshold ++++++++++++++" << endl;
-      //cout << "     " << count << endl;
-      //cout << "++++++++++++++++++++++++++++++++++" << endl;
 
-      //check depth for hands!
-      //cout << "================> HAND >============ " << endl;
-      DepthStat d = h.doDepthMath(ofRectangle(0,0,h.r.width,h.r.height));
-      //cout << "================< HAND <============ " << endl;
-      if(d.valid){
-
-        //cout << "hand Depth: " << d.max << endl;
-        if(d.max > (depth - offsetBack)){
-          if(d.max < (depth + offsetFront)){
-            //if((d.min < (depth + 400))||(d.min > (depth - 400))){
-
-            if (openFaceModel != nullptr) {
-              isRaisingHand = true;
-            }
-          }
-        }
-
-      } else {
-        //cout << "hand depth NOT VALID" << endl;
-      }
-      */
     }
 
     if (timestampHandRaised == 0 && isRaisingHand) {
