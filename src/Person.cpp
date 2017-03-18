@@ -415,11 +415,13 @@ void Person::drawFrontDepthPoints(ofColor c) const{
 
 void Person::drawFrontHandbox(ofColor c) const{
   drawFrontHandThresholded();
-  if(isRaisingHand){
-    drawBoundBox(h.r, c);
-  }
-  else{
-    drawBoundBox(h.r, ofColor(30,30,30,200));
+  if(openFaceModel != nullptr){
+    if(isRaisingHand){
+      drawBoundBox(h.r, c);
+    }
+    else{
+      drawBoundBox(h.r, ofColor(30,30,30,200));
+    }
   }
 }
 void Person::drawFrontPose(ofColor c) const{
@@ -683,7 +685,9 @@ void Person::update(const ofPixels &newColorPixels, const ofFloatPixels &newDept
         //cout << "ratio: " << ratio << " / " << threshold << endl;
 
         if(ratio > threshold){
-          isRaisingHand = true;
+          if(openFaceModel != nullptr){
+            isRaisingHand = true;
+          }
         }
       }
 
