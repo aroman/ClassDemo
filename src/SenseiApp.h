@@ -1,12 +1,14 @@
 #pragma once
 
-#include "ClassVisualizer.h"
+#include "ClassComponent.h"
 #include "ofBaseApp.h"
+
+enum class SenseiAppMode {VISUALIZE, RECORD};
 
 class SenseiApp : public ofBaseApp {
 
 private:
-  ClassVisualizer *visualizer;
+  ClassComponent *component;
   void updateKinect();
   void detectLandmarks();
   void detectMxnet();
@@ -17,6 +19,7 @@ public:
   void draw();
   ~SenseiApp();
 
+  SenseiAppMode mode = SenseiAppMode::VISUALIZE;
   bool isFullScreen = true;
 
   void keyPressed(int key);

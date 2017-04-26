@@ -25,7 +25,9 @@ set(sources
   src/SenseiApp.cpp
   src/OpenFaceModel.cpp
   src/OpenFaceModelPool.cpp
+  src/ClassComponent.cpp
   src/ClassVisualizer.cpp
+  src/ClassRecorder.cpp
   src/FaceDetector.cpp
   src/MtcnnDetector.cpp
   src/Person.cpp

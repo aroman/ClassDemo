@@ -49,13 +49,6 @@ ClassVisualizer::ClassVisualizer() {
   //set colors
     lightBlue = ofColor(28,154,255);
 
-  kinect = new KinectHelper();
-
-  bool didConnectSuccessfully = kinect->connect();
-  if (!didConnectSuccessfully) {
-      std::exit(1);
-  }
-
   const char *numModelsEnv = std::getenv("NUM_MODELS");
   if (numModelsEnv != NULL) {
     int numModels = atoi(numModelsEnv);
@@ -66,10 +59,10 @@ ClassVisualizer::ClassVisualizer() {
   }
 
   openFaceModelPool = new OpenFaceModelPool(openFaceModelPoolSize, CameraIntrinsics{
-    kinect->fx,
-    kinect->fy,
-    kinect->cx,
-    kinect->cy
+    this->kinect->fx,
+    this->kinect->fy,
+    this->kinect->cx,
+    this->kinect->cy
   });
 
   faceDetector = new FaceDetector();
@@ -90,18 +83,15 @@ ClassVisualizer::~ClassVisualizer() {
   faceDetector->waitForThread(true);
   delete faceDetector;
 
-  kinect->waitForThread(true);
-  kinect->disconnect();
-
   delete openFaceModelPool;
 }
 
 void ClassVisualizer::update() {
-  if (!kinect->isConnected) return;
+  if (!this->kinect->isConnected) return;
 
   TS_START("[Kinect] update frames");
-  colorPixels = kinect->getColorPixels();
-  depthPixels = kinect->getAlignedDepthPixels();
+  colorPixels = this->kinect->getColorPixels();
+  depthPixels = this->kinect->getAlignedDepthPixels();
   TS_STOP("[Kinect] update frames");
   hasData = (colorPixels.size() > 0);
 

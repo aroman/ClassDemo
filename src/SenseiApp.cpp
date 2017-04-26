@@ -1,15 +1,30 @@
 #include "SenseiApp.h"
 
 #include <math.h>
+#include "ClassVisualizer.h"
+#include "ClassRecorder.h"
 #include "ofAppRunner.h"
 #include "ofxCv/Utilities.h"
 
 void SenseiApp::setup() {
-  visualizer = new ClassVisualizer();
+  // Parse environment variable and set app mode
+  const char *senseiModeEnv = std::getenv("SENSEI_MODE");
+  if (senseiModeEnv != NULL) {
+    std::string senseiMode(senseiModeEnv);
+    if (senseiMode == "record") {
+      mode = SenseiAppMode::RECORD;
+    }
+  }
+
+  if (mode == SenseiAppMode::RECORD) {
+    component = new ClassRecorder();
+  } else {
+    component = new ClassVisualizer();
+  }
 }
 
 void SenseiApp::update() {
-  visualizer->update();
+  component->update();
   std::stringstream strm;
   strm << "(" << floor(ofGetFrameRate()) << " FPS)";
   ofSetWindowTitle(strm.str());
@@ -17,13 +32,13 @@ void SenseiApp::update() {
 
 void SenseiApp::draw() {
   ofClear(0);
-  visualizer->draw();
+  component->draw();
 }
 
 SenseiApp::~SenseiApp() {
   ofLogNotice("SenseiApp", "Shutting down...");
-  if (visualizer != NULL) {
-    delete visualizer;
+  if (component != NULL) {
+    delete component;
   }
 }
 
@@ -33,16 +48,24 @@ SenseiApp::~SenseiApp() {
 //because it will only register once
 //otherwise it'll flip as long as it's pressed down
 void SenseiApp::keyReleased(int key) {
-  if (visualizer == NULL) return;
+  if (mode != SenseiAppMode::VISUALIZE) {
+    return;
+  }
+
+  ClassVisualizer *visualizer = static_cast<ClassVisualizer *>(component);
+
+  if (visualizer == NULL) {
+    return;
+  }
 
   //don't use case 27: //escape
   //  escape will close the app!
-  switch(key){
+  switch (key) {
     case 86: //V - same as v
     case 118: //v - toggles view
     case 32: //spacebar - toggles between two views
       //switch from one mode to the other
-      if(visualizer->mode == ViewAngle::FRONTAL){
+      if (visualizer->mode == ViewAngle::FRONTAL){
           visualizer->mode = ViewAngle::BIRDSEYE;
       }
       else visualizer->mode = ViewAngle::FRONTAL;
