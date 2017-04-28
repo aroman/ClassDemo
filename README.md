@@ -1,5 +1,7 @@
 # Sensei
 
+Data collection and analysis tool for ClassInsight.
+
 #### [⌨️ Developing](#-developing-1)
 #### [🚀 Deploying](#-deploying-1)
 #### [🏃 Running](#-running-1)
