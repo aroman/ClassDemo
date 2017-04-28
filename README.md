@@ -48,7 +48,7 @@ Simple!
 ## 🚀 Deploying
 
 - Commit and push your changes to this repo onto github
-- Change SENSEI_VERSION in the Dockerfile (currently lives in [aroman/sensei-docker](aroman/sensei-docker)) to the full hash of the commit you want to deploy. e.g. `4a13ec34d7c0ad3853ecf5d530dc8048c6c70ad8`.
+- Change `SENSEI_VERSION` in `Dockerfile` (currently lives in [aroman/sensei-docker](https://gist.github.com/aroman/sensei-docker)) to the full hash of the commit you want to deploy. e.g. `4a13ec34d7c0ad3853ecf5d530dc8048c6c70ad8`.
 - Rebuild the docker image by running `docker build -t sensei .` (assuming you are running from a directory containing the dockerfile)
 - Tag the built image: `docker tag sensei aroman/sensei:HASH`, where `HASH` is the commit-hash you are deploying
 - Push the image: `docker push aroman/sensei:HASH`
