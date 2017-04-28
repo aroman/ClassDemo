@@ -32,6 +32,7 @@ set(sources
   src/MtcnnDetector.cpp
   src/Person.cpp
   src/drawUtils.cpp
+  src/gzstream/gzstream.cpp
 )
 # set_source_files_properties(3rdParty/of/src/poco/Foundation/include/Poco/AtomicCounter.h PROPERTIES COMPILE_FLAGS -Wno-deprecated-declarations)
 

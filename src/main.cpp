@@ -4,7 +4,6 @@
 #include "ofxTimeMeasurements.h"
 
 int main() {
-  // ofSetupOpenGL(640*2, 360*2, OF_WINDOW);
   ofSetupOpenGL(1920, 1080, OF_WINDOW);
 
   // Set the framework to something sane, otherwise the frame rate will be unbounded
@@ -13,7 +12,7 @@ int main() {
   ofSetVerticalSync(false);
   ofSetDataPathRoot("data");
   ofSetWindowTitle("sensei");
-  ofSetFullscreen(true);
+  // ofSetFullscreen(true);
 
   TIME_SAMPLE_SET_FRAMERATE(30.0f);
   TIME_SAMPLE_GET_INSTANCE()->setUIActivationKey('T');

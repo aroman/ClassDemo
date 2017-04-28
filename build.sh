@@ -5,7 +5,6 @@ normal=$(tput sgr0)
 
 mkdir -p build \
 && cd build \
-&& cmake .. -DCMAKE_INSTALL_PREFIX=../install \
 && make -j4 install
 
 if [ $? -eq 0 ]; then
