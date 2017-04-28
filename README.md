@@ -1,8 +1,8 @@
 # Sensei
 
-#### [⌨️ Developing](#developing)
-#### [🚀 Deploying](#deploying)
-#### [🏃 Running](#running)
+#### [⌨️ Developing](#-developing-1)
+#### [🚀 Deploying](#-deploying-1)
+#### [🏃 Running](#-running-1)
 
 ## ⌨️ Developing
 
