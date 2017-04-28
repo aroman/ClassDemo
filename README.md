@@ -61,11 +61,11 @@ Simple!
 - Run:
 
 ```
-docker run -it
+docker run -it \
   --privileged \
   -e DISPLAY \
   -v /tmp/.X11-unix:/tmp/.X11-unix \
-  -v /dev/bus/usb:/dev/bus/usb \
-  -v /dev/dri:/dev/dri \
+  -v /dev/bus/usb \
+  -v /dev/dri \
   aroman/sensei
 ```
