@@ -3,6 +3,7 @@
 #include <math.h>
 #include "ClassVisualizer.h"
 #include "ClassRecorder.h"
+#include "HandRecorder.h"
 #include "ofAppRunner.h"
 #include "ofxCv/Utilities.h"
 
@@ -11,13 +12,16 @@ void SenseiApp::setup() {
   const char *senseiModeEnv = std::getenv("SENSEI_MODE");
   if (senseiModeEnv != NULL) {
     std::string senseiMode(senseiModeEnv);
-    if (senseiMode == "record") {
-      mode = SenseiAppMode::RECORD;
+    if (senseiMode == "record" || senseiMode == "record-class") {
+      mode = SenseiAppMode::RECORD_CLASS;
+      component = new ClassRecorder();
     }
-  }
-
-  if (mode == SenseiAppMode::RECORD) {
-    component = new ClassRecorder();
+    else if (senseiMode == "record-hand") {
+      mode = SenseiAppMode::RECORD_HAND;
+      component = new HandRecorder();
+    } else {
+      component = new ClassVisualizer();
+    }
   } else {
     component = new ClassVisualizer();
   }

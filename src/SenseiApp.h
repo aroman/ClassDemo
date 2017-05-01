@@ -3,7 +3,7 @@
 #include "ClassComponent.h"
 #include "ofBaseApp.h"
 
-enum class SenseiAppMode {VISUALIZE, RECORD};
+enum class SenseiAppMode {VISUALIZE, RECORD_CLASS, RECORD_HAND};
 
 class SenseiApp : public ofBaseApp {
 

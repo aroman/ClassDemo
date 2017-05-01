@@ -28,6 +28,7 @@ set(sources
   src/ClassComponent.cpp
   src/ClassVisualizer.cpp
   src/ClassRecorder.cpp
+  src/HandRecorder.cpp
   src/FaceDetector.cpp
   src/MtcnnDetector.cpp
   src/ofxVideoRecorder.cpp
