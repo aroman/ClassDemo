@@ -8,6 +8,9 @@
 #include "ofTrueTypeFont.h"
 #include "ofGraphics.h"
 #include "Person.h"
+#include "ofxGui.h"
+
+enum class HandLabel {RAISED, NOT_RAISED};
 
 class HandRecorder : public ClassComponent {
 
@@ -19,13 +22,20 @@ public:
   void onFaceDetectionResults(const vector<ofRectangle> &bboxes);
 
 private:
+  HandLabel currentLabel = HandLabel::NOT_RAISED;
   bool hasData = false;
+
+  ofxFloatSlider radius;
+  ofxPanel gui;
+
+  ofDirectory *raisedImagesDir;
+  ofDirectory *notRaisedImagesDir;
 
   ofPixels colorPixels;
   ofFloatPixels depthPixels; // depth pixels in meters
 
   ofTexture colorTexture;
-  ofTexture scaledDepthTexture;
+  ofTexture paintedPixelsTexture;
 
   ofTrueTypeFont openSansBold;
   ofMutex peopleAccessMutex;

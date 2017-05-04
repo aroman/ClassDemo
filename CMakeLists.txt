@@ -33,7 +33,9 @@ set(sources
   src/MtcnnDetector.cpp
   src/ofxVideoRecorder.cpp
   src/Person.cpp
+  src/Person_drawing.cpp
   src/drawUtils.cpp
+  src/Serializers.cpp
   src/gzstream/gzstream.cpp
 )
 # set_source_files_properties(3rdParty/of/src/poco/Foundation/include/Poco/AtomicCounter.h PROPERTIES COMPILE_FLAGS -Wno-deprecated-declarations)
@@ -63,7 +65,7 @@ include_directories(${NUMPY_INCLUDES})
 include_directories(${PYTHON_INCLUDE_DIRS})
 
 ### addons
-# ofxaddon(ofxGui)
+ofxaddon(ofxGui)
 ofxaddon(3rdParty/addons/ofxCv)
 ofxaddon(3rdParty/addons/ofxTimeMeasurements)
 

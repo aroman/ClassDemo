@@ -1,29 +1,66 @@
 #include "HandRecorder.h"
 
 #include <cstdlib>
+#include <cmath>
 #include "ofxTimeMeasurements.h"
 #include "drawUtils.h"
+#include "Serializers.h"
 
 static const int DIST_THRESH = 150;
+static const std::string OUTPUT_PATH_ROOT = "../hand-images";
 
-#define SCREEN_HEIGHT (1080)
-#define SCREEN_WIDTH (1920)
+static const float MIN_DEPTH_MILLIMETERS = 1;
+static const float MAX_DEPTH_MILLIMETERS = 10000;
+
+float averagePixelValue(const ofFloatPixels &pixels) {
+  auto numPixels = pixels.size();
+  float totalPixelValue = 0;
+  const float *pixelData = pixels.getData();
+  for (size_t i = 0; i < numPixels; i++) {
+    auto currentPixel = pixelData[i];
+    auto normalizedPixelValue = max(min(currentPixel, MAX_DEPTH_MILLIMETERS), MIN_DEPTH_MILLIMETERS);
+    totalPixelValue += normalizedPixelValue;
+  }
+  auto average = totalPixelValue / numPixels;
+  return average;
+}
+
+ofPixels paintPixelsWithinRange(const ofFloatPixels &pixels, float low, float high) {
+  ofPixels paintedPixels;
+  paintedPixels.allocate(pixels.getWidth(), pixels.getHeight(), OF_IMAGE_COLOR_ALPHA);
+  // ofLogNotice("paintPixelsWithinRange") << pixels.getWidth() << "x" << pixels.getHeight();
+  const float *data = pixels.getData();
+  auto redPixel = ofColor(255,0,0,127);
+  auto transparentPixel = ofColor(0,0,0,0);
+
+  for (int i = 0; i < pixels.getWidth() * pixels.getHeight(); i += 1) {
+    auto normalizedPixelValue = max(min(data[i], MAX_DEPTH_MILLIMETERS), MIN_DEPTH_MILLIMETERS);
+    bool isPixelWithinThreshold = (normalizedPixelValue > low) && (normalizedPixelValue < high);
+    paintedPixels.setColor(i*4, isPixelWithinThreshold ? redPixel : transparentPixel);
+  }
+
+  return paintedPixels;
+}
 
 HandRecorder::HandRecorder() {
   hasData = false;
 
-  openSansBold.load("fonts/OpenSans-Bold.ttf", 20, true);
+  openSansBold.load("fonts/OpenSans-Bold.ttf", 50, true);
 
-  faceDetector = new FaceDetector(6.5);
+  auto outputPath = ofFilePath::join(OUTPUT_PATH_ROOT, ofGetTimestampString());
+
+  raisedImagesDir = new ofDirectory(ofFilePath::join(outputPath, "true"));
+  notRaisedImagesDir = new ofDirectory(ofFilePath::join(outputPath, "false"));
+
+  gui.setup();
+  gui.add(radius.setup("radius", 255, 25, 500));
+
+  faceDetector = new FaceDetector(10);
   faceDetector->startThread(true);
   // Might help performance a bit, we don't want it stealing CPU time
   // from the main/GL/draw thread!
   (&faceDetector->getPocoThread())->setPriority(Poco::Thread::PRIO_LOWEST);
-  ofAddListener(
-    faceDetector->onDetectionResults,
-    this,
-    &HandRecorder::onFaceDetectionResults
-  );
+  ofAddListener(faceDetector->onDetectionResults, this, &HandRecorder::onFaceDetectionResults);
 }
 
 HandRecorder::~HandRecorder() {
@@ -44,49 +81,63 @@ void HandRecorder::update() {
 
   if (!hasData) return;
 
-  TS_START("update depth texture");
-  ofFloatPixels scaledDepth = depthPixels;
-  scaleDepthPixelsForDrawing(&scaledDepth);
-  scaledDepthTexture.loadData(scaledDepth);
-  TS_STOP("update depth texture");
-
   TS_START("update color texture");
   colorTexture.loadData(colorPixels);
   TS_STOP("update color texture");
+
+  peopleAccessMutex.lock();
+  for (auto &person : people) {
+    person.update(colorPixels, depthPixels);
+    TS_START("paint depth pixels");
+    ofPoint faceCenter = person.f.r.getCenter();
+    // ofLogNotice("Person") << "average face depth: " << mmToFeet(averageFaceDepth) << "ft";
+    auto averageFaceDepth = averagePixelValue(person.f.depthPixels);
+    ofPixels depthPaintedPixels = paintPixelsWithinRange(
+      person.h.depthPixels,
+      averageFaceDepth - (radius * 2),
+      averageFaceDepth + radius
+    );
+    paintedPixelsTexture.loadData(depthPaintedPixels);
+    TS_STOP("update depth texture");
+
+  }
+  peopleAccessMutex.unlock();
 
   faceDetector->updateImage(colorPixels);
 }
 
 void HandRecorder::draw() {
-  if (!hasData){
-    return;
-  }
+  if (!hasData) return;
 
   colorTexture.draw(0, 0);
 
-  // Render depth as semi-transparent overlay
+  if (people.size() == 0) return;
+
+  auto const &person = people[0];
+
   ofEnableAlphaBlending();
-  ofSetColor(255,255,255,170);
-  scaledDepthTexture.draw(0,0);
+  paintedPixelsTexture.draw(person.h.r.x, person.h.r.y);
   ofDisableAlphaBlending();
 
-  // Draw people
-  for (auto const &person : people) {
-    // person.drawFrontBBox(ofColor::orange);
-    ofRectangle bb = person.currentBoundingBox();
-    bb.scaleFromCenter(4.5);
+  drawBoundBox(person.f.r, ofColor::purple);
+  drawBoundBox(person.h.r, ofColor::blue);
+  ofSetColor(ofColor::white);
 
-    float heightOffset = bb.height * 0.4;
-    bb.height += heightOffset;
-    bb.y -= heightOffset;
+  gui.draw();
 
-    float widthOffset = bb.width * 0.4;
-    bb.width += widthOffset;
-    bb.x -= (widthOffset / 2);
-
-    drawBoundBox(bb, ofColor::orange);
-    ofSetColor(255,255,255);
+  auto barHeight = 200;
+  ofColor barColor;
+  if (currentLabel == HandLabel::RAISED) {
+    barColor = ofColor::green;
+  } else {
+    barColor = ofColor::red;
   }
+  ofFill();
+  ofSetColor(barColor);
+  ofDrawRectangle(0, ofGetHeight() - barHeight, ofGetWidth(), barHeight);
+  ofSetColor(ofColor::white);
+  ofNoFill();
+  ofDrawBitmapStringHighlight((currentLabel == HandLabel::RAISED ? "RAISED" : "NOT RAISED"), 100, 200);
 }
 
 void HandRecorder::onFaceDetectionResults(const vector<ofRectangle> &bboxes) {
@@ -122,7 +173,7 @@ void HandRecorder::onFaceDetectionResults(const vector<ofRectangle> &bboxes) {
 
     ofLogNotice("HandRecorder") << "closest distance: " << closestDistance;
     if (closestDistance < DIST_THRESH) {
-      assert (closestPersonIndex != -1);
+      assert(closestPersonIndex != -1);
       people.at(closestPersonIndex).updateMtcnnBoundingBox(bbox);
     } else {
       people.push_back(Person(bbox));
@@ -139,6 +190,18 @@ void HandRecorder::onFaceDetectionResults(const vector<ofRectangle> &bboxes) {
   for (auto &person : people) {
     ofLogNotice("HandRecorder") << person;
   }
+
+  string baseFilePath;
+  int randInt = round(ofRandom(0, 1000000));
+  if (currentLabel == HandLabel::RAISED) {
+    baseFilePath = ofFilePath::join(raisedImagesDir->getAbsolutePath(), ofToString(randInt));
+  } else {
+    baseFilePath = ofFilePath::join(notRaisedImagesDir->getAbsolutePath(), ofToString(randInt));
+  }
+
+  ofLogNotice("HandRecorder") << baseFilePath;
+
+  // serializeColor(baseFilePath + ".jpg", person.f.colorPixels);
 
   peopleAccessMutex.unlock();
 

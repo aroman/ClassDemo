@@ -163,6 +163,7 @@ void drawStringBottomRight(ofTrueTypeFont font, string s, int xr, int yr, ofColo
 
 void scaleDepthPixelsForDrawing(ofFloatPixels *depthPixels) {
   // Scale from meters to 0-1 (float)
+
   float *pixelData = depthPixels->getData();
   for (int i = 0; i < depthPixels->size(); i++) {
       pixelData[i] = ofMap(pixelData[i], 500, 10000, 1, 0, true);
