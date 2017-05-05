@@ -203,7 +203,22 @@ void SenseiApp::keyReleased(int key) {
   }
 }
 
-void SenseiApp::keyPressed(int key) {}
+void SenseiApp::keyPressed(int key) {
+  if (mode != SenseiAppMode::RECORD_HAND) return;
+  HandRecorder *recorder = static_cast<HandRecorder *>(component);
+  if (key == 'h' || key == '1') {
+    recorder->setState(RecordState::RAISE);
+  }
+  else if (key == 'n' || key == '2') {
+    recorder->setState(RecordState::DONT_RAISE);
+  }
+  else if (key == ' ') {
+    recorder->setState(RecordState::WAIT);
+  }
+  else if (key == OF_KEY_DOWN) {
+    recorder->saveFramesToDisk();
+  }
+}
 void SenseiApp::mouseMoved(int x, int y) {}
 void SenseiApp::mouseDragged(int x, int y, int button) {}
 void SenseiApp::mousePressed(int x, int y, int button) {}

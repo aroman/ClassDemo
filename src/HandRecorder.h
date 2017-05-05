@@ -10,7 +10,14 @@
 #include "Person.h"
 #include "ofxGui.h"
 
-enum class HandLabel {RAISED, NOT_RAISED};
+enum class RecordState {
+  WAIT,
+  RAISE,
+  DONT_RAISE,
+  TROUBLE,
+  MOVE_CENTER,
+  NO_FACE
+};
 
 class HandRecorder : public ClassComponent {
 
@@ -20,9 +27,12 @@ public:
   void update();
   void draw();
   void onFaceDetectionResults(const vector<ofRectangle> &bboxes);
+  void setState(RecordState newState);
+  void saveFramesToDisk();
 
 private:
-  HandLabel currentLabel = HandLabel::NOT_RAISED;
+  ofImage stateImage;
+  RecordState state = RecordState::WAIT;
   bool hasData = false;
 
   ofxFloatSlider radius;
@@ -36,6 +46,7 @@ private:
 
   ofTexture colorTexture;
   ofTexture paintedPixelsTexture;
+  ofTexture parsedDepthTexture;
 
   ofTrueTypeFont openSansBold;
   ofMutex peopleAccessMutex;

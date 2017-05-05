@@ -5,8 +5,8 @@
 #include "ofAppRunner.h"
 
 static const double FACE_SCALE_RATIO = 0.75;
-static const double HANDSPACE_X_RATIO = 5;
-static const double HANDSPACE_Y_RATIO = 4;
+static const double HANDSPACE_X_RATIO = 7;
+static const double HANDSPACE_Y_RATIO = 5.5;
 
 float mmToFeet(float millimeters) { return millimeters * 0.00328084; }
 float feetToMm(float feet) { return feet * 304.8; }
@@ -73,39 +73,43 @@ void Person::recalculateSpaces() {
   f.r = currentBoundingBox();
   f.r.scaleFromCenter(FACE_SCALE_RATIO);
 
-  auto hWidthScaled = HANDSPACE_X_RATIO * f.r.width;
-  auto hHeightScaled = HANDSPACE_Y_RATIO * f.r.height;
+  // auto hWidthScaled = HANDSPACE_X_RATIO * f.r.width;
+  // auto hHeightScaled = HANDSPACE_Y_RATIO * f.r.height;
+
+  auto hWidthScaled = 800;
+  auto hHeightScaled = 550;
 
   h.r = ofRectangle(
-    f.r.x - (hWidthScaled / 4),
-    f.r.y - (hHeightScaled),
+    f.r.x - (hWidthScaled / 2) + (f.r.width / 2),
+    f.r.y - (hHeightScaled / 1.8),
     hWidthScaled,
-    hHeightScaled * 1.5
+    hHeightScaled
   );
 
   ofRectangle window = ofRectangle(0, 0, ofGetWidth(), ofGetHeight());
 
   if (!window.inside(h.r)) {
-    if (!window.intersects(h.r)) {
-      h.r = ofRectangle(0,0,0,0);
-    } else {
-      auto x0 = h.r.x;
-      auto y0 = h.r.y;
-
-      auto x1 = h.r.x + h.r.width;
-      auto y1 = h.r.y + h.r.height;
-
-      x0 = MAX(0.0, x0);
-      y0 = MAX(0.0, y0);
-
-      x1 = MIN(x1, window.width);
-      y1 = MIN(y1, window.height);
-
-      h.r.x = x0;
-      h.r.y = y0;
-      h.r.width = x1 - x0;
-      h.r.height = y1 - y0;
-    }
+    h.r = ofRectangle(0,0,0,0);
+    // if (!window.intersects(h.r)) {
+    //   h.r = ofRectangle(0,0,0,0);
+    // } else {
+    //   auto x0 = h.r.x;
+    //   auto y0 = h.r.y;
+    //
+    //   auto x1 = h.r.x + h.r.width;
+    //   auto y1 = h.r.y + h.r.height;
+    //
+    //   x0 = MAX(0.0, x0);
+    //   y0 = MAX(0.0, y0);
+    //
+    //   x1 = MIN(x1, window.width);
+    //   y1 = MIN(y1, window.height);
+    //
+    //   h.r.x = x0;
+    //   h.r.y = y0;
+    //   h.r.width = x1 - x0;
+    //   h.r.height = y1 - y0;
+    // }
    }
 }
 

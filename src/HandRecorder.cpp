@@ -7,10 +7,17 @@
 #include "Serializers.h"
 
 static const int DIST_THRESH = 150;
-static const std::string OUTPUT_PATH_ROOT = "../hand-images";
+static const string OUTPUT_PATH_ROOT = "../hand-images";
 
 static const float MIN_DEPTH_MILLIMETERS = 1;
 static const float MAX_DEPTH_MILLIMETERS = 10000;
+
+static const string UI_BANNER_RAISE = "images/record-hand/raise.png";
+static const string UI_BANNER_DONT_RAISE = "images/record-hand/dont-raise.png";
+static const string UI_BANNER_TROUBLE = "images/record-hand/lost-tracking.png";
+static const string UI_BANNER_WAIT = "images/record-hand/wait.png";
+static const string UI_BANNER_CENTER = "images/record-hand/move-center.png";
+static const string UI_BANNER_NO_FACE = "images/record-hand/no-face.png";
 
 float averagePixelValue(const ofFloatPixels &pixels) {
   auto numPixels = pixels.size();
@@ -25,18 +32,15 @@ float averagePixelValue(const ofFloatPixels &pixels) {
   return average;
 }
 
-ofPixels paintPixelsWithinRange(const ofFloatPixels &pixels, float low, float high) {
+ofPixels paintPixelsWithinRange(ofColor inColor, ofColor outColor, const ofFloatPixels &pixels, float low, float high) {
   ofPixels paintedPixels;
   paintedPixels.allocate(pixels.getWidth(), pixels.getHeight(), OF_IMAGE_COLOR_ALPHA);
-  // ofLogNotice("paintPixelsWithinRange") << pixels.getWidth() << "x" << pixels.getHeight();
   const float *data = pixels.getData();
-  auto redPixel = ofColor(255,0,0,127);
-  auto transparentPixel = ofColor(0,0,0,0);
 
   for (int i = 0; i < pixels.getWidth() * pixels.getHeight(); i += 1) {
     auto normalizedPixelValue = max(min(data[i], MAX_DEPTH_MILLIMETERS), MIN_DEPTH_MILLIMETERS);
     bool isPixelWithinThreshold = (normalizedPixelValue > low) && (normalizedPixelValue < high);
-    paintedPixels.setColor(i*4, isPixelWithinThreshold ? redPixel : transparentPixel);
+    paintedPixels.setColor(i*4, isPixelWithinThreshold ? inColor : outColor);
   }
 
   return paintedPixels;
@@ -61,6 +65,8 @@ HandRecorder::HandRecorder() {
   // from the main/GL/draw thread!
   (&faceDetector->getPocoThread())->setPriority(Poco::Thread::PRIO_LOWEST);
   ofAddListener(faceDetector->onDetectionResults, this, &HandRecorder::onFaceDetectionResults);
+
+  setState(RecordState::WAIT);
 }
 
 HandRecorder::~HandRecorder() {
@@ -85,22 +91,39 @@ void HandRecorder::update() {
   colorTexture.loadData(colorPixels);
   TS_STOP("update color texture");
 
+
+  paintedPixelsTexture.clear();
+  bool isRecording = state == RecordState::RAISE || state == RecordState::DONT_RAISE;
+
   peopleAccessMutex.lock();
-  for (auto &person : people) {
+
+  if (people.size() == 0) {
+    setState(RecordState::NO_FACE);
+  } else {
+    auto &person = people[0];
     person.update(colorPixels, depthPixels);
     TS_START("paint depth pixels");
-    ofPoint faceCenter = person.f.r.getCenter();
+    if (person.h.r.getArea() == 0) {
+      setState(RecordState::MOVE_CENTER);
+    } else {
+      if (state != RecordState::RAISE && state != RecordState::DONT_RAISE) {
+        setState(RecordState::WAIT);
+      }
+      ofPoint faceCenter = person.f.r.getCenter();
+      auto averageFaceDepth = averagePixelValue(person.f.depthPixels);
+      ofPixels depthPaintedPixels = paintPixelsWithinRange(
+        isRecording ? (ofColor(255,0,0,127)) : (ofColor(255,255,255,127)),
+        ofColor(0,0,0,0),
+        person.h.depthPixels,
+        averageFaceDepth - (radius * 2),
+        averageFaceDepth + radius
+      );
+      paintedPixelsTexture.loadData(depthPaintedPixels);
+    }
     // ofLogNotice("Person") << "average face depth: " << mmToFeet(averageFaceDepth) << "ft";
-    auto averageFaceDepth = averagePixelValue(person.f.depthPixels);
-    ofPixels depthPaintedPixels = paintPixelsWithinRange(
-      person.h.depthPixels,
-      averageFaceDepth - (radius * 2),
-      averageFaceDepth + radius
-    );
-    paintedPixelsTexture.loadData(depthPaintedPixels);
-    TS_STOP("update depth texture");
-
+    TS_STOP("paint depth pixels");
   }
+
   peopleAccessMutex.unlock();
 
   faceDetector->updateImage(colorPixels);
@@ -111,37 +134,96 @@ void HandRecorder::draw() {
 
   colorTexture.draw(0, 0);
 
-  if (people.size() == 0) return;
+  if (people.size() == 0) {
+    if (stateImage.isAllocated()) {
+      stateImage.draw(0, 0);
+    }
+    return;
+  }
 
   auto const &person = people[0];
 
-  ofEnableAlphaBlending();
-  paintedPixelsTexture.draw(person.h.r.x, person.h.r.y);
-  ofDisableAlphaBlending();
+  if (paintedPixelsTexture.isAllocated()) {
+    ofEnableAlphaBlending();
+    paintedPixelsTexture.draw(person.h.r.x, person.h.r.y);
+    ofDisableAlphaBlending();
+  }
 
-  drawBoundBox(person.f.r, ofColor::purple);
-  drawBoundBox(person.h.r, ofColor::blue);
+  bool isRecording = state == RecordState::RAISE || state == RecordState::DONT_RAISE;
+
+  ofNoFill();
+  ofSetLineWidth(10.0);
+  ofSetColor(isRecording ? (ofColor::red) : (ofColor::white));
+  ofDrawRectangle(person.h.r);
+
+  if (person.h.r.getArea() == 0) {
+    ofSetColor(ofColor::white);
+    ofSetLineWidth(5.0);
+    ofDrawRectangle(person.f.r);
+  }
   ofSetColor(ofColor::white);
 
   gui.draw();
 
-  auto barHeight = 200;
-  ofColor barColor;
-  if (currentLabel == HandLabel::RAISED) {
-    barColor = ofColor::green;
-  } else {
-    barColor = ofColor::red;
+  if (stateImage.isAllocated()) {
+    stateImage.draw(0, 0);
   }
-  ofFill();
-  ofSetColor(barColor);
-  ofDrawRectangle(0, ofGetHeight() - barHeight, ofGetWidth(), barHeight);
-  ofSetColor(ofColor::white);
-  ofNoFill();
-  ofDrawBitmapStringHighlight((currentLabel == HandLabel::RAISED ? "RAISED" : "NOT RAISED"), 100, 200);
+
+  if (parsedDepthTexture.isAllocated()) {
+    parsedDepthTexture.draw(0, 0);
+  }
+}
+
+void HandRecorder::setState(RecordState newState) {
+  // If the new state is the same as the old state, no-op
+  if (newState == state) return;
+
+  state = newState;
+
+  stateImage.clear();
+  if (state == RecordState::MOVE_CENTER) {
+    stateImage.load(UI_BANNER_CENTER);
+  }
+  else if (state == RecordState::RAISE) {
+    stateImage.load(UI_BANNER_RAISE);
+  }
+  else if (state == RecordState::DONT_RAISE) {
+    stateImage.load(UI_BANNER_DONT_RAISE);
+  }
+  else if (state == RecordState::NO_FACE) {
+    stateImage.load(UI_BANNER_NO_FACE);
+  }
+  else {
+    stateImage.load(UI_BANNER_WAIT);
+  }
+}
+
+void HandRecorder::saveFramesToDisk() {
+  if (people.size() == 0) return;
+  auto const &person = people[0];
+  if (state == RecordState::RAISE || state == RecordState::DONT_RAISE) {
+    ofDirectory *baseDir = (state == RecordState::RAISE) ? raisedImagesDir : notRaisedImagesDir;
+    string baseFilePath = ofFilePath::join(
+      baseDir->getAbsolutePath(),
+      ofToString(ofGetElapsedTimeMicros())
+    );
+    ofLogNotice("HandRecorder") << baseFilePath;
+    serializeColor(baseFilePath + ".color.jpg", person.h.colorPixels);
+    ofPoint faceCenter = person.f.r.getCenter();
+    auto averageFaceDepth = averagePixelValue(person.f.depthPixels);
+    ofPixels filteredDepthPixels = paintPixelsWithinRange(
+      ofColor::white,
+      ofColor::black,
+      person.h.depthPixels,
+      averageFaceDepth - (radius * 2),
+      averageFaceDepth + radius
+    );
+    serializeColor(baseFilePath + ".depth.jpg", filteredDepthPixels);
+  }
 }
 
 void HandRecorder::onFaceDetectionResults(const vector<ofRectangle> &bboxes) {
-  ofLogNotice("HandRecorder") << "onFaceDetectionResults " << bboxes.size();
+  // ofLogNotice("HandRecorder") << "onFaceDetectionResults " << bboxes.size();
 
   peopleAccessMutex.lock();
 
@@ -171,7 +253,7 @@ void HandRecorder::onFaceDetectionResults(const vector<ofRectangle> &bboxes) {
       }
     }
 
-    ofLogNotice("HandRecorder") << "closest distance: " << closestDistance;
+    // ofLogNotice("HandRecorder") << "closest distance: " << closestDistance;
     if (closestDistance < DIST_THRESH) {
       assert(closestPersonIndex != -1);
       people.at(closestPersonIndex).updateMtcnnBoundingBox(bbox);
@@ -187,22 +269,5 @@ void HandRecorder::onFaceDetectionResults(const vector<ofRectangle> &bboxes) {
     }
   }
 
-  for (auto &person : people) {
-    ofLogNotice("HandRecorder") << person;
-  }
-
-  string baseFilePath;
-  int randInt = round(ofRandom(0, 1000000));
-  if (currentLabel == HandLabel::RAISED) {
-    baseFilePath = ofFilePath::join(raisedImagesDir->getAbsolutePath(), ofToString(randInt));
-  } else {
-    baseFilePath = ofFilePath::join(notRaisedImagesDir->getAbsolutePath(), ofToString(randInt));
-  }
-
-  ofLogNotice("HandRecorder") << baseFilePath;
-
-  // serializeColor(baseFilePath + ".jpg", person.f.colorPixels);
-
   peopleAccessMutex.unlock();
-
 }

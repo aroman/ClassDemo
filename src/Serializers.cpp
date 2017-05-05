@@ -9,6 +9,21 @@ void serializeDepth(std::string path, ofFloatPixels depthPixels) {
   depthFileOf.close();
 }
 
+ofFloatPixels parseDepth(std::string path) {
+  igzstream compressedDepth;
+  compressedDepth.open(path.c_str());
+  if (!compressedDepth.good()) {
+    ofLogError("Serializer") << "Couldn't decompress depth file at '" << path << "'";
+    exit(1);
+  }
+
+  ofBuffer depthBufRead(compressedDepth);
+
+  ofFloatPixels depthPixelsRead;
+  depthPixelsRead.setFromPixels(reinterpret_cast<float *>(depthBufRead.getData()), 800, 550, OF_PIXELS_GRAY);
+  return depthPixelsRead;
+}
+
 void serializeColor(std::string path, ofPixels colorPixels) {
   ofImage colorImage;
   colorImage.setFromPixels(
@@ -16,7 +31,8 @@ void serializeColor(std::string path, ofPixels colorPixels) {
     colorPixels.getWidth(),
     colorPixels.getHeight(),
     OF_IMAGE_COLOR_ALPHA,
-    false // isRGBOrder -> false, because the data is encoded as BGR
+    true // isRGBOrder -> false, because the data is encoded as BGR
   );
-  colorImage.save(path, OF_IMAGE_QUALITY_MEDIUM);
+  colorImage.setImageType(OF_IMAGE_COLOR);
+  colorImage.save(path, OF_IMAGE_QUALITY_HIGH);
 }
