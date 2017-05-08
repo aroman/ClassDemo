@@ -2,7 +2,9 @@
 #include "ofUtils.h"
 #include "gzstream/gzstream.h"
 
-void serializeDepth(std::string path, ofFloatPixels depthPixels) {
+#include "drawUtils.h"
+
+void serializeDepthRaw(std::string path, ofFloatPixels depthPixels) {
   ofBuffer depthBuf((char*)depthPixels.getData(), depthPixels.getTotalBytes());
   ogzstream depthFileOf(path.c_str());
   depthFileOf << depthBuf;
@@ -35,4 +37,11 @@ void serializeColor(std::string path, ofPixels colorPixels) {
   );
   colorImage.setImageType(OF_IMAGE_COLOR);
   colorImage.save(path, OF_IMAGE_QUALITY_HIGH);
+}
+
+void serializeGrayscaleDepth(std::string path, ofPixels grayscalePixels) {
+  ofImage depthImage;
+  depthImage.setFromPixels(grayscalePixels);
+  depthImage.setImageType(OF_IMAGE_COLOR_ALPHA);
+  depthImage.save(path);
 }

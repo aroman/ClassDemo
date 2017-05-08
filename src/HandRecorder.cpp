@@ -9,7 +9,7 @@
 static const int DIST_THRESH = 150;
 static const string OUTPUT_PATH_ROOT = "../hand-images";
 
-static const float MIN_DEPTH_MILLIMETERS = 1;
+static const float MIN_DEPTH_MILLIMETERS = 250;
 static const float MAX_DEPTH_MILLIMETERS = 10000;
 
 static const string UI_BANNER_RAISE = "images/record-hand/raise.png";
@@ -46,6 +46,30 @@ ofPixels paintPixelsWithinRange(ofColor inColor, ofColor outColor, const ofFloat
   return paintedPixels;
 }
 
+ofPixels scaleDepthWithinRange(const ofFloatPixels &pixels, float low, float high) {
+  ofPixels paintedPixels;
+  paintedPixels.allocate(pixels.getWidth(), pixels.getHeight(), OF_IMAGE_COLOR_ALPHA);
+  const float *data = pixels.getData();
+
+  for (int i = 0; i < pixels.getWidth() * pixels.getHeight(); i += 1) {
+    auto normalizedPixelValue = max(min(data[i], MAX_DEPTH_MILLIMETERS), MIN_DEPTH_MILLIMETERS);
+    bool isPixelWithinThreshold = (normalizedPixelValue > low) && (normalizedPixelValue < high);
+    if (isPixelWithinThreshold) {
+      float scaledDepthValue = ofMap(normalizedPixelValue, low, high, 0, 255, true);
+      ofColor grayscalePixel = ofColor(
+        scaledDepthValue,
+        scaledDepthValue,
+        scaledDepthValue
+      );
+      paintedPixels.setColor(i*4, grayscalePixel);
+    } else {
+      paintedPixels.setColor(i*4, ofColor::black);
+    }
+  }
+
+  return paintedPixels;
+}
+
 HandRecorder::HandRecorder() {
   hasData = false;
 
@@ -57,6 +81,7 @@ HandRecorder::HandRecorder() {
   notRaisedImagesDir = new ofDirectory(ofFilePath::join(outputPath, "false"));
 
   gui.setup();
+  gui.setPosition(100, 1000);
   gui.add(radius.setup("radius", 255, 25, 500));
 
   faceDetector = new FaceDetector(10);
@@ -211,14 +236,19 @@ void HandRecorder::saveFramesToDisk() {
     serializeColor(baseFilePath + ".color.jpg", person.h.colorPixels);
     ofPoint faceCenter = person.f.r.getCenter();
     auto averageFaceDepth = averagePixelValue(person.f.depthPixels);
-    ofPixels filteredDepthPixels = paintPixelsWithinRange(
-      ofColor::white,
-      ofColor::black,
+    // ofPixels filteredDepthPixels = paintPixelsWithinRange(
+    //   ofColor::white,
+    //   ofColor::black,
+    //   person.h.depthPixels,
+    //   averageFaceDepth - (radius * 2),
+    //   averageFaceDepth + radius
+    // );
+    ofPixels scaledDepth = scaleDepthWithinRange(
       person.h.depthPixels,
       averageFaceDepth - (radius * 2),
       averageFaceDepth + radius
     );
-    serializeColor(baseFilePath + ".depth.jpg", filteredDepthPixels);
+    serializeGrayscaleDepth(baseFilePath + ".depth.png", scaledDepth);
   }
 }
 
