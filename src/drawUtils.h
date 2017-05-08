@@ -4,6 +4,9 @@
 #include "ofColor.h"
 #include "ofRectangle.h"
 
+static const float MIN_DEPTH_MILLIMETERS = 250;
+static const float MAX_DEPTH_MILLIMETERS = 10000;
+
 void drawBoundBox(ofRectangle r, ofColor color);
 
 void drawStringCentered(ofTrueTypeFont font, string s, int xc, int yc, ofColor boxColor, ofColor textColor);

@@ -68,22 +68,45 @@ void Person::update(const ofPixels &newColorPixels, const ofFloatPixels &newDept
   }
 }
 
+// returns distance from front in millimeters
+float Person::distanceFromFront() const {
+  auto numPixels = f.depthPixels.size();
+  float totalPixelValue = 0;
+  const float *pixelData = f.depthPixels.getData();
+  for (size_t i = 0; i < numPixels; i++) {
+    auto currentPixel = pixelData[i];
+    auto normalizedPixelValue = max(min(currentPixel, MAX_DEPTH_MILLIMETERS), MIN_DEPTH_MILLIMETERS);
+    totalPixelValue += normalizedPixelValue;
+  }
+  auto average = totalPixelValue / numPixels;
+  return average;
+}
+
 void Person::recalculateSpaces() {
 
   f.r = currentBoundingBox();
   f.r.scaleFromCenter(FACE_SCALE_RATIO);
 
+  ofLogNotice("Person") << "distanceFromFront: " << distanceFromFront();
+
   // auto hWidthScaled = HANDSPACE_X_RATIO * f.r.width;
   // auto hHeightScaled = HANDSPACE_Y_RATIO * f.r.height;
 
-  auto hWidthScaled = 800;
-  auto hHeightScaled = 550;
+  // auto scaleBasedOnDistance = (distanceFromFront() / MAX_DEPTH_MILLIMETERS) * 10;
+  auto scaleBasedOnDistance = ofMap(distanceFromFront(),
+    MIN_DEPTH_MILLIMETERS, MAX_DEPTH_MILLIMETERS * 0.75,
+    1, 0, true
+  );
+  ofLogNotice("Person") << "scaleBasedOnDistance: " << scaleBasedOnDistance;
+
+  auto hWidth = 800 * scaleBasedOnDistance;
+  auto hHeight = 550 * scaleBasedOnDistance;
 
   h.r = ofRectangle(
-    f.r.x - (hWidthScaled / 2) + (f.r.width / 2),
-    f.r.y - (hHeightScaled / 1.8),
-    hWidthScaled,
-    hHeightScaled
+    f.r.x - (hWidth / 2) + (f.r.width / 2),
+    f.r.y - (hHeight / 1.8),
+    hWidth,
+    hHeight
   );
 
   ofRectangle window = ofRectangle(0, 0, ofGetWidth(), ofGetHeight());

@@ -9,28 +9,12 @@
 static const int DIST_THRESH = 150;
 static const string OUTPUT_PATH_ROOT = "../hand-images";
 
-static const float MIN_DEPTH_MILLIMETERS = 250;
-static const float MAX_DEPTH_MILLIMETERS = 10000;
-
 static const string UI_BANNER_RAISE = "images/record-hand/raise.png";
 static const string UI_BANNER_DONT_RAISE = "images/record-hand/dont-raise.png";
 static const string UI_BANNER_TROUBLE = "images/record-hand/lost-tracking.png";
 static const string UI_BANNER_WAIT = "images/record-hand/wait.png";
 static const string UI_BANNER_CENTER = "images/record-hand/move-center.png";
 static const string UI_BANNER_NO_FACE = "images/record-hand/no-face.png";
-
-float averagePixelValue(const ofFloatPixels &pixels) {
-  auto numPixels = pixels.size();
-  float totalPixelValue = 0;
-  const float *pixelData = pixels.getData();
-  for (size_t i = 0; i < numPixels; i++) {
-    auto currentPixel = pixelData[i];
-    auto normalizedPixelValue = max(min(currentPixel, MAX_DEPTH_MILLIMETERS), MIN_DEPTH_MILLIMETERS);
-    totalPixelValue += normalizedPixelValue;
-  }
-  auto average = totalPixelValue / numPixels;
-  return average;
-}
 
 ofPixels paintPixelsWithinRange(ofColor inColor, ofColor outColor, const ofFloatPixels &pixels, float low, float high) {
   ofPixels paintedPixels;
@@ -84,7 +68,7 @@ HandRecorder::HandRecorder() {
   gui.setPosition(100, 1000);
   gui.add(radius.setup("radius", 255, 25, 500));
 
-  faceDetector = new FaceDetector(10);
+  faceDetector = new FaceDetector(8);
   faceDetector->startThread(true);
   // Might help performance a bit, we don't want it stealing CPU time
   // from the main/GL/draw thread!
@@ -135,13 +119,13 @@ void HandRecorder::update() {
         setState(RecordState::WAIT);
       }
       ofPoint faceCenter = person.f.r.getCenter();
-      auto averageFaceDepth = averagePixelValue(person.f.depthPixels);
+      auto distanceFromFront = person.distanceFromFront();
       ofPixels depthPaintedPixels = paintPixelsWithinRange(
         isRecording ? (ofColor(255,0,0,127)) : (ofColor(255,255,255,127)),
         ofColor(0,0,0,0),
         person.h.depthPixels,
-        averageFaceDepth - (radius * 2),
-        averageFaceDepth + radius
+        distanceFromFront - (radius * 2),
+        distanceFromFront + radius
       );
       paintedPixelsTexture.loadData(depthPaintedPixels);
     }
@@ -234,8 +218,7 @@ void HandRecorder::saveFramesToDisk() {
     );
     ofLogNotice("HandRecorder") << baseFilePath;
     serializeColor(baseFilePath + ".color.jpg", person.h.colorPixels);
-    ofPoint faceCenter = person.f.r.getCenter();
-    auto averageFaceDepth = averagePixelValue(person.f.depthPixels);
+    auto averageFaceDepth = person.distanceFromFront();
     // ofPixels filteredDepthPixels = paintPixelsWithinRange(
     //   ofColor::white,
     //   ofColor::black,

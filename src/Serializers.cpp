@@ -4,6 +4,9 @@
 
 #include "drawUtils.h"
 
+static const int IM_HEIGHT = 800;
+static const int IM_WIDTH = 550;
+
 void serializeDepthRaw(std::string path, ofFloatPixels depthPixels) {
   ofBuffer depthBuf((char*)depthPixels.getData(), depthPixels.getTotalBytes());
   ogzstream depthFileOf(path.c_str());
@@ -36,6 +39,7 @@ void serializeColor(std::string path, ofPixels colorPixels) {
     true // isRGBOrder -> false, because the data is encoded as BGR
   );
   colorImage.setImageType(OF_IMAGE_COLOR);
+  colorImage.resize(IM_HEIGHT, IM_WIDTH);
   colorImage.save(path, OF_IMAGE_QUALITY_HIGH);
 }
 
@@ -43,5 +47,6 @@ void serializeGrayscaleDepth(std::string path, ofPixels grayscalePixels) {
   ofImage depthImage;
   depthImage.setFromPixels(grayscalePixels);
   depthImage.setImageType(OF_IMAGE_COLOR_ALPHA);
+  depthImage.resize(IM_HEIGHT, IM_WIDTH);
   depthImage.save(path);
 }

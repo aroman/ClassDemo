@@ -33,6 +33,7 @@ struct Person {
 
   // Methods
   string getName() const;
+  float distanceFromFront() const;
   void recalculateSpaces();
   void updateMtcnnBoundingBox(ofRectangle bboxFromMtcnn);
   void update(const ofPixels &newColorPixels, const ofFloatPixels &newDepthPixels);
