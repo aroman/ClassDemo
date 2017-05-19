@@ -97,7 +97,6 @@ void Person::recalculateSpaces() {
     MIN_DEPTH_MILLIMETERS, MAX_DEPTH_MILLIMETERS * 0.75,
     1, 0, true
   );
-  ofLogNotice("Person") << "scaleBasedOnDistance: " << scaleBasedOnDistance;
 
   auto hWidth = 800 * scaleBasedOnDistance;
   auto hHeight = 550 * scaleBasedOnDistance;

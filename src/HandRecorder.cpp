@@ -39,7 +39,7 @@ ofPixels scaleDepthWithinRange(const ofFloatPixels &pixels, float low, float hig
     auto normalizedPixelValue = max(min(data[i], MAX_DEPTH_MILLIMETERS), MIN_DEPTH_MILLIMETERS);
     bool isPixelWithinThreshold = (normalizedPixelValue > low) && (normalizedPixelValue < high);
     if (isPixelWithinThreshold) {
-      float scaledDepthValue = ofMap(normalizedPixelValue, low, high, 0, 255, true);
+      float scaledDepthValue = ofMap(normalizedPixelValue, low, high, 255, 0, true);
       ofColor grayscalePixel = ofColor(
         scaledDepthValue,
         scaledDepthValue,
@@ -104,6 +104,19 @@ void HandRecorder::update() {
   paintedPixelsTexture.clear();
   bool isRecording = state == RecordState::RAISE || state == RecordState::DONT_RAISE;
 
+  if (state == RecordState::TROUBLE) {
+    auto currentTime = ofGetElapsedTimeMillis();
+    // ofLogNotice("HandRecorder") << "currentTime: " << currentTime << "timeSinceTrouble: " << timeSinceTrouble;
+    if (currentTime - timeSinceTrouble > 500) {
+      // ofLogNotice("HandRecorder") << "resetting timeSinceTrouble";
+      timeSinceTrouble = 0;
+      setState(RecordState::WAIT);
+    } else {
+      // ofLogNotice("HandRecorder") << "returning";
+      return;
+    }
+  }
+
   peopleAccessMutex.lock();
 
   if (people.size() == 0) {
@@ -120,6 +133,10 @@ void HandRecorder::update() {
       }
       ofPoint faceCenter = person.f.r.getCenter();
       auto distanceFromFront = person.distanceFromFront();
+      if (abs(distanceFromFront - lastDistance) > 100) {
+        setState(RecordState::TROUBLE);
+      }
+      lastDistance = distanceFromFront;
       ofPixels depthPaintedPixels = paintPixelsWithinRange(
         isRecording ? (ofColor(255,0,0,127)) : (ofColor(255,255,255,127)),
         ofColor(0,0,0,0),
@@ -201,6 +218,10 @@ void HandRecorder::setState(RecordState newState) {
   }
   else if (state == RecordState::NO_FACE) {
     stateImage.load(UI_BANNER_NO_FACE);
+  }
+  else if (state == RecordState::TROUBLE) {
+    timeSinceTrouble = ofGetElapsedTimeMillis();
+    stateImage.load(UI_BANNER_TROUBLE);
   }
   else {
     stateImage.load(UI_BANNER_WAIT);

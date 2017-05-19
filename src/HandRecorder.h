@@ -35,6 +35,9 @@ private:
   RecordState state = RecordState::WAIT;
   bool hasData = false;
 
+  uint64_t timeSinceTrouble;
+  float lastDistance;
+
   ofxFloatSlider radius;
   ofxPanel gui;
 
