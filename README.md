@@ -50,9 +50,11 @@ Simple!
 - Commit and push your changes to this repo onto github
 - Change `SENSEI_VERSION` in `Dockerfile` (currently lives in [aroman/sensei-docker](https://github.com/aroman/sensei-docker)) to the full hash of the commit you want to deploy. e.g. `4a13ec34d7c0ad3853ecf5d530dc8048c6c70ad8`.
 - Rebuild the docker image by running `docker build -t sensei .` (assuming you are running from a directory containing the dockerfile)
-- Tag the built image: `docker tag sensei aroman/sensei:latest`, where `HASH` is the commit-hash you are deploying
-- Push the image: `docker push aroman/sensei:latest`
-- Pull the image on each machine you want to upgrade: `docker pull aroman/sensei:latest`
+- Tag the built image: `docker tag sensei aroman/sensei:<TAG>`, where `<TAG>` is a tag name you've created for the build (e.g. date, commit hash)
+- Push the image: `docker push aroman/sensei:<TAG>`
+- Pull the image on each machine you want to upgrade: `docker pull aroman/sensei:<TAG>`
+
+**Note:** `docker pull` doesn't work like `git pull` — it doesn't always pull down the latest version. You should use explicit tags when pulling and pushing. See [here](https://medium.com/@mccode/the-misunderstood-docker-tag-latest-af3babfd6375) for a more detailed explanation.
 
 ## 🏃 Running
 
@@ -70,7 +72,7 @@ DISPLAY=:0 docker run -it \
   -v /dev/dri \
   aroman/sensei:2c9844c991fd4c6f31f379045a0d045bf095f04d
 ```
-### Extract recordings
+### Extract recordings from pre-NAS recordings (deprecated)
 
 ```
 sudo docker export CONTAINER_NAME > contents.tar
