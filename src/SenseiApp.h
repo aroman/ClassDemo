@@ -19,7 +19,7 @@ public:
   void draw();
   ~SenseiApp();
 
-  SenseiAppMode mode = SenseiAppMode::VISUALIZE;
+  SenseiAppMode mode = SenseiAppMode::RECORD;//VISUALIZE;
   bool isFullScreen = true;
 
   void keyPressed(int key);

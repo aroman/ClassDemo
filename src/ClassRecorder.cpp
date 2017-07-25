@@ -7,7 +7,7 @@
 
 
 // path to save recordings relative to the 'data' directory
-static const std::string RECORDINGS_DIR_PATH = "../recordings";
+static const std::string RECORDINGS_DIR_PATH = "/opt/sensei/recordings";
 
 ClassRecorder::ClassRecorder() {
   auto recordingPath = ofFilePath::join(RECORDINGS_DIR_PATH, ofGetTimestampString());
@@ -24,7 +24,7 @@ ClassRecorder::ClassRecorder() {
 
   // ofAddListener(ofEvents().exit, this, &ClassRecorder::finishRecording);
 
-  // readDepthFile("/home/sensei/Developer/sensei/install/recordings/2017-04-28-01-51-48-360/depth/81.dat");
+   //readDepthFile("/home/sensei/Developer/sensei/install/recordings/samples/2977.dat");
 }
 
 ClassRecorder::~ClassRecorder() {
@@ -58,16 +58,17 @@ void ClassRecorder::readDepthFile(std::string path) {
   // ofLogNotice("ClassRecorder") << "file size = " << depthBufRead.size();
 
   ofFloatPixels depthPixelsRead;
-  depthPixelsRead.setFromPixels(reinterpret_cast<float *>(depthBufRead.getData()), 512, 424, OF_PIXELS_GRAY);
+  depthPixelsRead.setFromPixels(reinterpret_cast<float *>(depthBufRead.getData()), 1920, 1082, OF_PIXELS_GRAY);
   scaleDepthPixelsForDrawing(&depthPixelsRead);
   depthImage.setFromPixels(depthPixelsRead);
+  //depthImage.save("/home/sensei/Developer/sensei/install/recordings/samples/delta2Uncompressed.jpg", OF_IMAGE_QUALITY_MEDIUM);
 }
 
 void ClassRecorder::update() {
   if (!this->kinect->isConnected) return;
 
   ofPixels colorPixels = this->kinect->getColorPixels();
-  ofFloatPixels depthPixels = this->kinect->getUnalignedDepthPixels();
+  ofFloatPixels depthPixels = this->kinect->getAlignedDepthPixels();
 
   bool hasData = (colorPixels.size() > 0);
 
