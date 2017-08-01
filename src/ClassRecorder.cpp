@@ -103,7 +103,7 @@ void ClassRecorder::update() {
     false // isRGBOrder -> false, because the data is encoded as BGR
   );
   colorImage.setImageType(OF_IMAGE_COLOR);
-  colorImage.save(colorImagePath, OF_IMAGE_QUALITY_MEDIUM);
+  colorImage.save(colorImagePath, OF_IMAGE_QUALITY_HIGH);
   TS_STOP("save color");
 
   TS_START("save depth");
