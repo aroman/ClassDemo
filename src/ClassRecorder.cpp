@@ -7,7 +7,7 @@
 
 
 // path to save recordings relative to the 'data' directory
-static const std::string RECORDINGS_DIR_PATH = "/opt/sensei/recordings";
+static const std::string RECORDINGS_DIR_PATH = "../recordings";
 
 ClassRecorder::ClassRecorder() {
   auto recordingPath = ofFilePath::join(RECORDINGS_DIR_PATH, ofGetTimestampString());
